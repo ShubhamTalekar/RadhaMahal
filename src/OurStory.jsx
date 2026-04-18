@@ -50,13 +50,37 @@ export default function OurStory() {
                         </h2>
                         <div className="space-y-6 text-lg text-[#000000] leading-relaxed font-body">
                             <p className="font-semibold text-xl text-primary">
-                                "Radha Mahal was born not from commerce, but from reverence."
+                                "Every brand has a beginning, but some begin with a feeling."
                             </p>
                             <p>
-                                Growing up surrounded by the rich textiles of India, our founder Neha developed a profound respect for the artisans who spend weeks, sometimes months, hunched over wooden looms to create a single six-yard masterpiece.
+                                For me, it started with two names—Neha, the one the world knows, and Radha, the one my home, my roots, and my heart have always called me. Over time, Radha became more than just a name. It became a quiet identity—a dream waiting to take form.
                             </p>
                             <p>
-                                Witnessing the gradual fading of these ancestral techniques in a fast-fashion world, Radha Mahal was established with a singular vision: to revive, protect, and celebrate the authentic handloom heritage of India. Every garment in our collection is a testament to the hands that wove it.
+                                Like every dreamer, I stepped into the world with big aspirations. I tried, I explored, I failed, and I learned. There were moments of doubt, moments when things didn't go as planned—but there was always a voice within me that refused to give up. A belief that one day, I would create something truly mine… something that would carry my essence.
+                            </p>
+                            <p>
+                                In the process of finding myself, I began expressing my thoughts through videos. It was raw, honest, and real—just me, sharing my journey. Slowly, people began to notice. Their words, their encouragement, and their belief in me became the strength I didn't know I needed. They saw something in me, and somewhere along the way, I started seeing it too.
+                            </p>
+                            <p>
+                                That's when the idea was born. I didn't just want to build a business. I wanted to build a world—a space that reflects warmth, belonging, beauty, and authenticity. A world where every piece tells a story. A world where tradition meets emotion. A world where everyone feels a part of something special.
+                            </p>
+                            <p>
+                                And that vision gave life to <span className="italic text-primary font-semibold">Radha Mahal</span>.
+                            </p>
+                            <p>
+                                <span className="font-semibold">Radha</span>—my soul, my identity. <span className="font-semibold">Mahal</span>—a place not just of walls, but of emotions… a home where everyone is welcome.
+                            </p>
+                            <p>
+                                At Radha Mahal, we bring you sarees and dresses that are not just products, but expressions of art. Each piece is thoughtfully sourced directly from skilled manufacturers, celebrating craftsmanship in its purest form. Our collections are handwoven, raw, and deeply rooted in authenticity—created with intention, love, and respect for tradition.
+                            </p>
+                            <p>
+                                We believe luxury is not just about appearance—it's about feeling. The feeling of wearing something made with heart. The feeling of carrying a story, a culture, a dream.
+                            </p>
+                            <p className="font-semibold text-xl text-primary italic">
+                                "This journey is no longer just mine. It belongs to every person who connects with it, believes in it, and becomes a part of it."
+                            </p>
+                            <p>
+                                Radha Mahal is not just a brand. It is a dream turned into a destination. A reflection of resilience, passion, and the courage to create your own world.
                             </p>
                         </div>
                     </div>
