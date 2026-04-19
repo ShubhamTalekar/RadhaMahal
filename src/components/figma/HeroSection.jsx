@@ -41,7 +41,7 @@ export function HeroSection({ slides }) {
       <Slider {...settings}>
         {slides.map((slide, index) => (
           <div key={index} className="relative">
-            <div className="relative h-[720px] md:h-[85vh]">
+            <div className="relative h-[100svh] md:h-[85vh]">
               <img
                 src={slide.image}
                 alt={slide.headline || slide.altText}

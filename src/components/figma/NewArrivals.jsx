@@ -43,6 +43,12 @@ export function NewArrivals({ newArrivals = [], wishlist = [], setWishlist }) {
       {
         breakpoint: 480,
         settings: {
+          slidesToShow: 2,
+        }
+      },
+      {
+        breakpoint: 380,
+        settings: {
           slidesToShow: 1,
         }
       }
@@ -76,7 +82,7 @@ export function NewArrivals({ newArrivals = [], wishlist = [], setWishlist }) {
           <div className="w-32 h-1 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent mx-auto"></div>
         </div>
 
-        <div className="px-8">
+        <div className="px-2 sm:px-8">
           <Slider {...settings}>
             {newArrivals.map((product) => (
               <div key={product.id} className="px-3">
@@ -112,15 +118,15 @@ export function NewArrivals({ newArrivals = [], wishlist = [], setWishlist }) {
                     </div>
                   </div>
 
-                  <div className="p-6 border-t-4 border-[#d4af37]/30 bg-gradient-to-b from-white to-[#fdfbf7]">
+                  <div className="p-3 sm:p-6 border-t-4 border-[#d4af37]/30 bg-gradient-to-b from-white to-[#fdfbf7]">
                     <h3 
-                      className="text-xl text-primary mb-3 font-bold group-hover:text-[#d4af37] transition-colors duration-300 truncate"
+                      className="text-sm sm:text-xl text-primary mb-1 sm:mb-3 font-bold group-hover:text-[#d4af37] transition-colors duration-300 truncate"
                      
                     >
                       {product.title}
                     </h3>
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl bg-gradient-to-r from-[#d4af37] to-[#b8941f] bg-clip-text text-transparent font-bold">
+                      <span className="text-base sm:text-2xl bg-gradient-to-r from-[#d4af37] to-[#b8941f] bg-clip-text text-transparent font-bold">
                         ₹{product.final_price?.toLocaleString('en-IN')}
                       </span>
                     </div>

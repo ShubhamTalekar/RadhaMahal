@@ -35,17 +35,17 @@ export default function Layout() {
                 </div>
                 <div className="absolute inset-0 top-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-secondary/10 via-transparent to-transparent pointer-events-none"></div>
                 
-                <div className="max-w-screen-2xl w-full mx-auto px-4 lg:px-8 py-5 relative z-10 grid grid-cols-3 items-center">
+                <div className="max-w-screen-2xl w-full mx-auto px-3 lg:px-8 py-3 lg:py-5 relative z-10 grid grid-cols-3 items-center">
                     
                     <div className="flex justify-start">
                         <Link to="/" className="relative group cursor-pointer flex flex-col items-start">
                             <span 
-                              className="text-2xl lg:text-[2rem] tracking-wide bg-gradient-to-r from-secondary via-[#f4d56f] to-secondary bg-clip-text text-transparent animate-gradient drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]"
+                              className="text-base sm:text-xl lg:text-[2rem] tracking-wide bg-gradient-to-r from-secondary via-[#f4d56f] to-secondary bg-clip-text text-transparent animate-gradient drop-shadow-[0_0_15px_rgba(212,175,55,0.5)] whitespace-nowrap"
                               
                             >
                               Radha Mahal
                             </span>
-                            <span className="text-secondary text-[10px] lg:text-xs mt-1 tracking-[0.3em] font-semibold uppercase font-body" >
+                            <span className="text-secondary text-[8px] sm:text-[10px] lg:text-xs mt-0.5 tracking-[0.2em] lg:tracking-[0.3em] font-semibold uppercase font-body" >
                               By Neha
                             </span>
                             <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-gradient-to-r from-secondary to-[#f4d56f] group-hover:w-full transition-all duration-500 font-body"></span>
@@ -103,7 +103,7 @@ export default function Layout() {
                     </nav>
 
                     {/* Action Icons */}
-                    <div className="flex justify-end items-center gap-5 text-white">
+                    <div className="flex justify-end items-center gap-3 lg:gap-5 text-white">
                         <div className="relative flex items-center">
                             <form onSubmit={handleSearch} className={`absolute top-full mt-6 right-0 bg-primary/95 backdrop-blur-xl border border-[#D4AF37]/20 shadow-[-10px_20px_30px_rgba(0,0,0,0.5)] rounded-xl transition-all duration-300 origin-top-right z-50 p-2 ${isSearchOpen ? 'w-80 opacity-100 scale-100' : 'w-80 opacity-0 scale-95 pointer-events-none'}`}>
                                 <input
