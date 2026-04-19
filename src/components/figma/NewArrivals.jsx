@@ -41,13 +41,7 @@ export function NewArrivals({ newArrivals = [], wishlist = [], setWishlist }) {
         }
       },
       {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 2,
-        }
-      },
-      {
-        breakpoint: 380,
+        breakpoint: 640,
         settings: {
           slidesToShow: 1,
         }

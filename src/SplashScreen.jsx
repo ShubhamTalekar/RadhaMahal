@@ -35,7 +35,7 @@ export default function SplashScreen({ onComplete }) {
                         <img 
                             src="/logo.png" 
                             alt="Radha Mahal By Neha" 
-                            className="w-72 md:w-96 h-auto object-contain relative z-10 drop-shadow-2xl rounded-2xl" 
+                            className="w-48 sm:w-64 md:w-96 max-w-[80vw] h-auto object-contain relative z-10 drop-shadow-2xl rounded-2xl" 
                         />
                     </motion.div>
                 </motion.div>

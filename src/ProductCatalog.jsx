@@ -275,7 +275,7 @@ export default function ProductCatalog() {
                                 visible: { transition: { staggerChildren: 0.05 } },
                                 hidden: {}
                             }}
-                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16">
+                            className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 sm:gap-x-8 gap-y-12 sm:gap-y-16">
                             {currentProducts.map((product) => (
                                 <motion.div 
                                     variants={{
@@ -309,19 +309,19 @@ export default function ProductCatalog() {
 
                                         {(!product.availableForSale) && (
                                             <div className="absolute inset-0 bg-[#250624]/40 z-[15] flex items-center justify-center pointer-events-none transition-all duration-500 group-hover/image:bg-[#250624]/20">
-                                                <span className="bg-[#111111]/80 backdrop-blur-md px-6 py-2 rounded-full text-[10px] uppercase font-bold tracking-widest text-[#e9c349] border border-[#e9c349]/20 shadow-2xl tracking-[0.2em]">Sold Out</span>
+                                                <span className="bg-[#111111]/80 backdrop-blur-md px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-[8px] sm:text-[10px] uppercase font-bold tracking-widest text-[#e9c349] border border-[#e9c349]/20 shadow-2xl tracking-[0.2em]">Sold Out</span>
                                             </div>
                                         )}
 
                                         {product.discount_percent > 0 && (
-                                            <div className="absolute top-4 right-4 z-10">
-                                                <span className="bg-[#250624]/80 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] uppercase font-bold tracking-widest text-[#e9c349] border border-[#e9c349]/20 shadow-lg">-{product.discount_percent}%</span>
+                                            <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10">
+                                                <span className="bg-[#250624]/80 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[8px] sm:text-[10px] uppercase font-bold tracking-widest text-[#e9c349] border border-[#e9c349]/20 shadow-lg">-{product.discount_percent}%</span>
                                             </div>
                                         )}
                                     </div>
-                                    <h4 className="font-headline text-on-surface text-lg mb-1 truncate" title={product.title}>{product.title}</h4>
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-secondary font-bold tracking-wider">₹{product.final_price.toLocaleString('en-IN')}</p>
+                                    <h4 className="font-headline text-on-surface text-sm sm:text-lg mb-1 truncate" title={product.title}>{product.title}</h4>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                        <p className="text-secondary font-bold tracking-wider text-sm sm:text-base">₹{product.final_price.toLocaleString('en-IN')}</p>
                                         {product.discount_percent > 0 && (
                                             <p className="text-xs text-outline line-through">₹{product.price.toLocaleString('en-IN')}</p>
                                         )}

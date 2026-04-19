@@ -62,7 +62,7 @@ export function HeroSection({ slides }) {
                         initial={{ y: 30, opacity: 0 }}
                         whileInView={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="text-4xl md:text-6xl lg:text-7xl text-[#fdfbf7] mb-6 leading-[1.1] font-bold drop-shadow-2xl whitespace-pre-line"
+                        className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-[#fdfbf7] mb-4 md:mb-6 leading-[1.1] font-bold drop-shadow-2xl whitespace-pre-line"
                        
                     >
                       <span className="inline-block bg-gradient-to-r from-secondary via-[#f4d56f] to-secondary bg-clip-text text-transparent animate-gradient drop-shadow-[0_2px_20px_rgba(212,175,55,0.8)]">
@@ -73,17 +73,17 @@ export function HeroSection({ slides }) {
                         initial={{ y: 30, opacity: 0 }}
                         whileInView={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-                        className="text-lg md:text-xl text-white/95 mb-10 drop-shadow-lg font-light leading-relaxed">
+                        className="text-base sm:text-lg md:text-xl text-white/95 mb-8 md:mb-10 drop-shadow-lg font-light leading-relaxed">
                       {slide.subtitle}
                     </motion.p>
-                    <div className="flex flex-col md:flex-row gap-6">
+                    <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
                       {slide.id && (
-                        <Link to={`/product/${slide.id}`} className="group relative px-12 py-4 bg-gradient-to-r from-secondary via-[#f4d56f] to-secondary bg-[length:200%_100%] hover:bg-right text-primary rounded-full transition-all duration-500 shadow-[0_0_30px_rgba(212,175,55,0.6)] hover:shadow-[0_0_40px_rgba(212,175,55,0.9)] transform hover:scale-105 font-bold text-[15px] overflow-hidden text-center">
+                        <Link to={`/product/${slide.id}`} className="group relative px-8 py-3 md:px-12 md:py-4 bg-gradient-to-r from-secondary via-[#f4d56f] to-secondary bg-[length:200%_100%] hover:bg-right text-primary rounded-full transition-all duration-500 shadow-[0_0_30px_rgba(212,175,55,0.6)] hover:shadow-[0_0_40px_rgba(212,175,55,0.9)] transform hover:scale-105 font-bold text-[15px] overflow-hidden text-center">
                           <span className="relative z-10">Shop Now</span>
                           <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                         </Link>
                       )}
-                      <Link to="/catalog" className="px-12 py-4 border-[1.5px] border-secondary text-[#fdfbf7] bg-primary/30 backdrop-blur-sm hover:bg-secondary hover:text-primary rounded-full transition-all duration-500 font-bold text-[15px] hover:-translate-y-1 shadow-lg text-center">
+                      <Link to="/catalog" className="px-8 py-3 md:px-12 md:py-4 border-[1.5px] border-secondary text-[#fdfbf7] bg-primary/30 backdrop-blur-sm hover:bg-secondary hover:text-primary rounded-full transition-all duration-500 font-bold text-[15px] hover:-translate-y-1 shadow-lg text-center">
                         Explore Collection
                       </Link>
                     </div>

@@ -26,9 +26,9 @@ export default function ProductImageGallery({ product }) {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="lg:col-span-7 grid grid-cols-5 gap-4">
+            className="lg:col-span-7 grid grid-cols-5 gap-2 md:gap-4">
             
-            <div className="col-span-5 rounded-lg overflow-hidden aspect-[3/4] relative group bg-[#fdfbf7]">
+            <div className="col-span-5 rounded-lg overflow-hidden aspect-square md:aspect-[3/4] max-h-[55vh] md:max-h-none relative group bg-[#fdfbf7]">
                 {activeMedia?.type === 'video' ? (
                     <video 
                         src={activeMedia.url} 
@@ -55,7 +55,7 @@ export default function ProductImageGallery({ product }) {
                 <div 
                     key={idx} 
                     onClick={() => setActiveIndex(idx)}
-                    className={`aspect-[3/4] rounded-lg overflow-hidden border transition-all cursor-pointer relative ${activeIndex === idx ? 'border-secondary opacity-100 shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'border-outline-variant/15 opacity-70 hover:opacity-100 hover:border-secondary/50'}`}
+                    className={`aspect-square md:aspect-[3/4] rounded-lg overflow-hidden border transition-all cursor-pointer relative ${activeIndex === idx ? 'border-secondary opacity-100 shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'border-outline-variant/15 opacity-70 hover:opacity-100 hover:border-secondary/50'}`}
                 >
                     {media.type === 'video' ? (
                         <>

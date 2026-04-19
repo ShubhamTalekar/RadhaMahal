@@ -41,8 +41,8 @@ export default function ShoppingBag() {
                         </div>
                     ) : (
                         bag.map((item) => (
-                            <div key={item.cartItemId} className="flex flex-col md:flex-row gap-8 pb-12 border-b border-outline-variant/20 items-center md:items-start group">
-                                <Link to={`/product/${item.id}`} className="w-full md:w-48 aspect-[3/4] overflow-hidden rounded-lg bg-surface-container-low flex-shrink-0">
+                            <div key={item.cartItemId} className="flex flex-row md:flex-row gap-4 md:gap-8 pb-8 md:pb-12 border-b border-outline-variant/20 items-start group">
+                                <Link to={`/product/${item.id}`} className="w-28 min-w-[7rem] md:w-48 aspect-[3/4] overflow-hidden rounded-lg bg-surface-container-low flex-shrink-0">
                                     <img alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src={item.image} />
                                 </Link>
                                 <div className="flex-grow flex flex-col justify-between py-2">
@@ -69,8 +69,8 @@ export default function ShoppingBag() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="mt-8 flex items-baseline gap-4">
-                                        <span className="font-headline text-2xl text-secondary">₹{(item.final_price || item.price).toLocaleString('en-IN')}</span>
+                                    <div className="mt-4 md:mt-8 flex flex-col md:flex-row items-baseline gap-2 md:gap-4">
+                                        <span className="font-headline text-lg md:text-2xl text-secondary">₹{(item.final_price || item.price).toLocaleString('en-IN')}</span>
                                         {item.discount_percent > 0 && item.price && (
                                             <span className="text-sm font-body text-outline line-through opacity-70">₹{item.price.toLocaleString('en-IN')}</span>
                                         )}

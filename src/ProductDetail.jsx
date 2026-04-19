@@ -171,9 +171,20 @@ export default function ProductDetail() {
                             </span>
                         </div>
                     </header>
-                    <p className="text-on-surface-variant text-lg leading-relaxed font-light">
-                        A masterpiece of {product.fabric} designed for {(product.occasion || []).join(' and ').toLowerCase()} celebrations. Each thread tells a story of exquisite craftsmanship.
-                    </p>
+                    {product.descriptionHtml ? (
+                        <div 
+                            className="text-on-surface-variant text-sm md:text-base leading-relaxed font-light prose prose-sm md:prose-base max-w-none prose-p:mb-4 prose-a:text-secondary"
+                            dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} 
+                        />
+                    ) : product.description ? (
+                        <p className="text-on-surface-variant text-base md:text-lg leading-relaxed font-light whitespace-pre-line">
+                            {product.description}
+                        </p>
+                    ) : (
+                        <p className="text-on-surface-variant text-base md:text-lg leading-relaxed font-light">
+                            A masterpiece of {product.fabric || 'silk'} designed for {(product.occasion || []).join(' and ').toLowerCase() || 'special'} celebrations. Each thread tells a story of exquisite craftsmanship.
+                        </p>
+                    )}
                     {product.variants?.length > 0 && (
                         <div className="space-y-6 animate-fade-in">
                             <div className="flex justify-between items-center">
