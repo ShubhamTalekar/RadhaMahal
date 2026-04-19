@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export function OurStory() {
   return (
-    <section id="about" className="py-20 bg-gradient-to-b from-[#f5f1ed] to-[#fdfbf7]">
+    <section id="about" className="py-20 bg-gradient-to-b from-[#f5f1ed] to-[#fdfbf7] overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Image Side */}

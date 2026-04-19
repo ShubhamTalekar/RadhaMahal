@@ -22,7 +22,7 @@ export default function Layout() {
     };
 
     return (
-        <div className="bg-surface text-on-surface font-body selection:bg-secondary selection:text-on-secondary min-h-screen flex flex-col">
+        <div className="bg-surface text-on-surface font-body selection:bg-secondary selection:text-on-secondary min-h-screen flex flex-col overflow-x-hidden">
             {/* Top Navigation Bar */}
             <header className="sticky top-0 z-50 bg-gradient-to-r from-primary via-primary to-primary text-[#fdfbf7] shadow-2xl border-b-2 border-secondary font-sans leading-relaxed">
                 {/* Announcement Marquee */}
