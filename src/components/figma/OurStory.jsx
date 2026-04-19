@@ -23,12 +23,12 @@ export function OurStory() {
               <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent" />
             </div>
             
-            <div className="absolute -bottom-8 -right-8 bg-[#d4af37] text-primary p-8 rounded-2xl shadow-xl max-w-xs">
-              <p className="text-4xl mb-2">
-                15+
+            <div className="absolute -bottom-8 lg:-bottom-12 -right-4 lg:-right-8 bg-secondary p-6 lg:p-8 rounded-2xl shadow-2xl max-w-[200px] animate-float z-20">
+              <p className="text-3xl lg:text-4xl font-headline text-on-secondary mb-2">
+                100%
               </p>
-              <p className="text-sm">
-                Years of Excellence in Ethnic Fashion
+              <p className="text-xs lg:text-sm text-on-secondary/90 font-medium">
+                Handcrafted with Love &amp; Precision
               </p>
             </div>
           </motion.div>
@@ -83,10 +83,10 @@ export function OurStory() {
                 </div>
                 <div>
                   <h3 className="text-xl text-primary mb-2">
-                    Award-Winning Designs
+                    Exclusive Collections
                   </h3>
                   <p className="text-[#6d5c7d]">
-                    Recognized for excellence in ethnic fashion and design innovation
+                    Limited-edition pieces blending Indian heritage with flawless modern execution
                   </p>
                 </div>
               </div>

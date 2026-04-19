@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { Footer as FigmaFooter } from './components/figma/Footer';
 import { useApp } from './context/AppContext';
@@ -12,6 +12,14 @@ export default function Layout() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [showLogoImage, setShowLogoImage] = useState(false);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setShowLogoImage(prev => !prev);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -46,16 +54,29 @@ export default function Layout() {
                         >
                             <span className="material-symbols-outlined text-[1.75rem]">menu</span>
                         </button>
-                        <Link to="/" className="relative group cursor-pointer flex flex-col items-start mt-1">
-                            <span 
-                              className="text-base sm:text-xl lg:text-[2rem] tracking-wide bg-gradient-to-r from-secondary via-[#f4d56f] to-secondary bg-clip-text text-transparent animate-gradient drop-shadow-[0_0_15px_rgba(212,175,55,0.5)] whitespace-nowrap"
-                              
-                            >
-                              Radha Mahal
-                            </span>
-                            <span className="text-secondary text-[8px] sm:text-[10px] lg:text-xs mt-0.5 tracking-[0.2em] lg:tracking-[0.3em] font-semibold uppercase font-body" >
-                              By Neha
-                            </span>
+                        <Link to="/" className="relative group cursor-pointer flex items-center mt-1 pb-1">
+                            <div className="grid items-center justify-items-start">
+                                {/* Text Logo Layer */}
+                                <div style={{ gridArea: '1 / 1' }} className={`flex flex-col items-start transition-all duration-[2000ms] ease-in-out ${showLogoImage ? 'opacity-0 scale-95 pointer-events-none blur-sm' : 'opacity-100 scale-100 blur-0'}`}>
+                                    <span 
+                                      className="font-headline text-xl sm:text-2xl lg:text-[2.5rem] tracking-wide bg-gradient-to-r from-secondary via-[#f4d56f] to-secondary bg-clip-text text-transparent animate-gradient drop-shadow-[0_0_15px_rgba(212,175,55,0.5)] whitespace-nowrap leading-none"
+                                    >
+                                      Radha Mahal
+                                    </span>
+                                    <span className="text-secondary text-[8px] sm:text-[10px] lg:text-xs mt-1 tracking-[0.2em] lg:tracking-[0.3em] font-semibold uppercase font-body" >
+                                      By Neha
+                                    </span>
+                                </div>
+                                
+                                {/* Image Logo Layer */}
+                                <div style={{ gridArea: '1 / 1' }} className={`flex items-center transition-all duration-[2000ms] ease-in-out ${showLogoImage ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-105 pointer-events-none blur-sm'}`}>
+                                    <img 
+                                        src="/logo.png" 
+                                        alt="Radha Mahal By Neha" 
+                                        className="h-16 sm:h-20 lg:h-[6.5rem] w-auto object-contain transition-transform duration-500 group-hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]" 
+                                    />
+                                </div>
+                            </div>
                             <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-gradient-to-r from-secondary to-[#f4d56f] group-hover:w-full transition-all duration-500 font-body"></span>
                         </Link>
                     </div>
