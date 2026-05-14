@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { Footer as FigmaFooter } from './components/figma/Footer';
+import { Footer as FigmaFooter } from './components/sections/Footer';
 import { useApp } from './context/AppContext';
 
-const ANNOUNCEMENT = import.meta.env.VITE_ANNOUNCEMENT_TEXT || "Free shipping all over Maharashtra";
 const ANNOUNCEMENT_REPEATS = 8;
+const DEFAULT_ANNOUNCEMENT = import.meta.env.VITE_ANNOUNCEMENT_TEXT || "Free shipping all over Maharashtra";
 
 export default function Layout() {
     const { bag, wishlist, user, setUser, categories, occasions } = useApp();
@@ -13,6 +13,17 @@ export default function Layout() {
     const [searchQuery, setSearchQuery] = useState("");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showLogoImage, setShowLogoImage] = useState(false);
+    const [announcement, setAnnouncement] = useState(DEFAULT_ANNOUNCEMENT);
+
+    useEffect(() => {
+        const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+        fetch(`${BASE}/api/v1/public/banner`)
+            .then(r => r.json())
+            .then(data => {
+                if (data?.data?.marqueeText) setAnnouncement(data.data.marqueeText);
+            })
+            .catch(() => {}); // silently keep default
+    }, []);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -38,13 +49,13 @@ export default function Layout() {
                 <div className="bg-[#d4af37] text-primary py-2 overflow-hidden flex whitespace-nowrap">
                     <div className="animate-marquee inline-block font-headline text-[10px] lg:text-sm tracking-[0.2em] uppercase font-bold">
                         {Array.from({ length: ANNOUNCEMENT_REPEATS }, (_, i) => (
-                            <span key={i} className="mx-12">{ANNOUNCEMENT}</span>
+                            <span key={i} className="mx-12">{announcement}</span>
                         ))}
                     </div>
                 </div>
                 <div className="absolute inset-0 top-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-secondary/10 via-transparent to-transparent pointer-events-none"></div>
                 
-                <div className="max-w-screen-2xl w-full mx-auto px-3 lg:px-8 py-3 lg:py-5 relative z-10 flex justify-between items-center bg-primary">
+                <div className="max-w-screen-2xl w-full mx-auto px-3 lg:px-8 py-2 lg:py-3 relative z-10 flex justify-between items-center bg-primary">
                     
                     <div className="flex justify-start items-center gap-3 md:gap-5">
                         <button 
@@ -57,23 +68,23 @@ export default function Layout() {
                         <Link to="/" className="relative group cursor-pointer flex items-center mt-1 pb-1">
                             <div className="grid items-center justify-items-start">
                                 {/* Text Logo Layer */}
-                                <div style={{ gridArea: '1 / 1' }} className={`flex flex-col items-start transition-all duration-[2000ms] ease-in-out ${showLogoImage ? 'opacity-0 scale-95 pointer-events-none blur-sm' : 'opacity-100 scale-100 blur-0'}`}>
+                                <div style={{ gridArea: '1 / 1' }} className={`flex flex-col items-end transition-all duration-[2000ms] ease-in-out ${showLogoImage ? 'opacity-0 scale-95 pointer-events-none blur-sm' : 'opacity-100 scale-100 blur-0'}`}>
                                     <span 
                                       className="font-headline text-xl sm:text-2xl lg:text-[2.5rem] tracking-wide bg-gradient-to-r from-secondary via-[#f4d56f] to-secondary bg-clip-text text-transparent animate-gradient drop-shadow-[0_0_15px_rgba(212,175,55,0.5)] whitespace-nowrap leading-none"
                                     >
                                       Radha Mahal
                                     </span>
-                                    <span className="text-secondary text-[8px] sm:text-[10px] lg:text-xs mt-1 tracking-[0.2em] lg:tracking-[0.3em] font-semibold uppercase font-body" >
-                                      By Neha
+                                    <span className="text-secondary text-[8px] sm:text-[10px] lg:text-xs tracking-[0.2em] lg:tracking-[0.3em] font-semibold uppercase font-body whitespace-nowrap" >
+                                      by Neha
                                     </span>
                                 </div>
                                 
                                 {/* Image Logo Layer */}
                                 <div style={{ gridArea: '1 / 1' }} className={`flex items-center transition-all duration-[2000ms] ease-in-out ${showLogoImage ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-105 pointer-events-none blur-sm'}`}>
                                     <img 
-                                        src="/logo.png" 
+                                        src="/brand-logo.png" 
                                         alt="Radha Mahal By Neha" 
-                                        className="h-16 sm:h-20 lg:h-[6.5rem] w-auto object-contain transition-transform duration-500 group-hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]" 
+                                        className="h-12 sm:h-14 lg:h-[4.5rem] w-auto object-contain transition-transform duration-500 group-hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]" 
                                     />
                                 </div>
                             </div>

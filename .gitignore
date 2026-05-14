@@ -16,6 +16,10 @@ env
 .env
 .env.*
 
+# Runtime / uploaded files — do NOT commit live binary uploads or mutable DB
+server/uploads/
+server/store.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

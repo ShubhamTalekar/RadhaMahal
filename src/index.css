@@ -118,3 +118,20 @@ input:-webkit-autofill:active {
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
+
+/* Bruteforce Elfsight widget watermark cleanup */
+a[href*="elfsight.com"],
+a[title*="Free"],
+[class*="eapps-link"],
+[class*="elfsight-app"] > div > a,
+.eapps-instagram-feed-title,
+.eapps-widget-title,
+[class*="WidgetBackground"],
+[class*="Watermark"] {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    width: 0 !important;
+}

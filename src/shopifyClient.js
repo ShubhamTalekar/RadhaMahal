@@ -6,7 +6,7 @@ const storefrontToken = import.meta.env.VITE_SHOPIFY_STOREFRONT_TOKEN;
 // Connect directly to the Shopify Storefront API from the browser.
 // The public token is safe to expose in frontend code.
 const SHOPIFY_API_VERSION = import.meta.env.VITE_SHOPIFY_API_VERSION || '2025-01';
-const endpoint = `https://${domain}/api/${SHOPIFY_API_VERSION}/graphql.json`;
+const endpoint = `https://${domain}/api/v1/${SHOPIFY_API_VERSION}/graphql.json`;
 
 const client = new GraphQLClient(endpoint, {
   headers: {
@@ -56,6 +56,8 @@ const PRODUCTS_QUERY = gql`
 `;
 
 let productsPromise = null;
+let lastFetchTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function shapeProduct(node) {
   const variant = node.variants.edges[0]?.node;
@@ -86,14 +88,18 @@ function shapeProduct(node) {
   };
 }
 
-export function getProducts() {
-  if (productsPromise) return productsPromise;
+export function getProducts(forceRefresh = false) {
+  const now = Date.now();
+  if (productsPromise && !forceRefresh && (now - lastFetchTime < CACHE_TTL)) {
+    return productsPromise;
+  }
   
   productsPromise = (async () => {
     try {
       const data = await client.request(PRODUCTS_QUERY, { first: 50 });
 
       if (data && data.products && data.products.edges.length > 0) {
+        lastFetchTime = Date.now();
         return data.products.edges.map(edge => {
           return shapeProduct(edge.node);
         });
@@ -189,6 +195,19 @@ const CAROUSEL_QUERY = gql`
               }
             }
           }
+          media(first: 5) {
+            edges {
+              node {
+                mediaContentType
+                ... on Video {
+                  sources {
+                    url
+                    format
+                  }
+                }
+              }
+            }
+          }
           variants(first: 1) {
             edges {
               node {
@@ -222,12 +241,22 @@ export async function getCarouselProducts() {
     return edges.map(({ node }) => {
       const numericId = node.id.split('/').pop();
       const imgNode = node.images.edges[0]?.node;
+
+      // Extract the first MP4 video URL from the product's media (if any)
+      const videoSource = node.media?.edges
+        .find(e => e.node.mediaContentType === 'VIDEO')
+        ?.node.sources?.find(s => s.format === 'mp4') ??
+        node.media?.edges
+          .find(e => e.node.mediaContentType === 'VIDEO')
+          ?.node.sources?.[0];
+
       return {
         id: numericId,
         title: node.title,
         handle: node.handle,
         image: imgNode?.url ?? '',
         altText: imgNode?.altText ?? node.title,
+        videoUrl: videoSource?.url ?? null,
       };
     });
   } catch (error) {
@@ -419,17 +448,73 @@ export async function loginCustomer(email, password) {
         status: o.financialStatus ? o.financialStatus.toLowerCase() : 'processing',
         date: new Date(o.processedAt).toLocaleDateString('en-GB'),
         total: parseFloat(o.totalPrice.amount),
-        items: o.lineItems.edges.map(li => ({
+        items: (o.lineItems?.edges || []).map(li => ({
           title: li.node.title,
-          image: li.node.variant?.image?.url,
-          id: li.node.variant?.product?.id?.split('/').pop()
+          quantity: li.node.quantity,
+          image: li.node.variant?.image?.url
         }))
       };
     });
 
-    return { customer: { ...customer, parsedOrders }, error: null };
+    return { 
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        name: `${customer.firstName || ''} ${customer.lastName || ''}`.trim(),
+        phone: customer.phone,
+        shopifyToken: customerAccessToken.accessToken,
+        orders: parsedOrders,
+        addresses: customer.addresses?.edges?.map(a => ({
+          id: a.node.id,
+          title: a.node.company || 'Address',
+          lines: [a.node.address1, a.node.address2, `${a.node.city}, ${a.node.province} ${a.node.zip}`, a.node.country].filter(Boolean),
+          isPrimary: false
+        })) || []
+      } 
+    };
   } catch (error) {
-    console.error('Shopify loginCustomer failed:', error);
-    return { customer: null, error: 'Service unavailable. Please try again later.' };
+    console.error("Login mutation failed:", error);
+    return { customer: null, error: 'Network error. Please try again.' };
+  }
+}
+
+export async function getCustomer(accessToken) {
+  try {
+    const customerData = await client.request(CUSTOMER_QUERY, { customerAccessToken: accessToken });
+    if (!customerData.customer) return null;
+    
+    const customer = customerData.customer;
+    const parsedOrders = (customer.orders?.edges || []).map(edge => {
+      const o = edge.node;
+      return {
+        id: o.orderNumber.toString(),
+        status: o.financialStatus ? o.financialStatus.toLowerCase() : 'processing',
+        date: new Date(o.processedAt).toLocaleDateString('en-IN', { dateStyle: 'medium' }),
+        total: parseFloat(o.totalPrice?.amount || 0),
+        items: (o.lineItems?.edges || []).map(li => ({
+          title: li.node.title,
+          quantity: li.node.quantity,
+          image: li.node.variant?.image?.url
+        }))
+      };
+    });
+
+    return {
+      id: customer.id,
+      email: customer.email,
+      name: `${customer.firstName || ''} ${customer.lastName || ''}`.trim(),
+      phone: customer.phone,
+      shopifyToken: accessToken,
+      orders: parsedOrders,
+      addresses: customer.addresses?.edges?.map(a => ({
+        id: a.node.id,
+        title: a.node.company || 'Address',
+        lines: [a.node.address1, a.node.address2, `${a.node.city}, ${a.node.province} ${a.node.zip}`, a.node.country].filter(Boolean),
+        isPrimary: false
+      })) || []
+    };
+  } catch (error) {
+    console.error("Get customer failed:", error);
+    return null;
   }
 }

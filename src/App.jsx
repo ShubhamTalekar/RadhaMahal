@@ -2,24 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Layout from './Layout';
-import Home from './Home';
-import ProductCatalog from './ProductCatalog';
-import ProductDetail from './ProductDetail';
-import ShoppingBag from './ShoppingBag';
-import Checkout from './Checkout';
-import Wishlist from './Wishlist';
-import Profile from './Profile';
-import OurStory from './OurStory';
-import SizeGuide from './SizeGuide';
-import Contact from './Contact';
-import Login from './Login';
-import Register from './Register';
-import VideoConsultation from './VideoConsultation';
-import FAQ from './FAQ';
-import Terms from './Terms';
-import Privacy from './Privacy';
+import Home from './pages/Home';
+import ProductCatalog from './pages/ProductCatalog';
+import ProductDetail from './pages/ProductDetail';
+import ShoppingBag from './pages/ShoppingBag';
+import Checkout from './pages/Checkout';
+import Wishlist from './pages/Wishlist';
+import Profile from './pages/Profile';
+import OurStory from './pages/OurStory';
+import SizeGuide from './pages/SizeGuide';
+import Contact from './pages/Contact';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import VideoConsultation from './pages/VideoConsultation';
+import FAQ from './pages/FAQ';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import AuthGuard from './components/AuthGuard';
-import SplashScreen from './SplashScreen';
+import SplashScreen from './pages/SplashScreen';
+import AdminDashboard from './pages/AdminDashboard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
 
 function ScrollToTop() {
@@ -42,11 +44,11 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
           <Route path="catalog" element={<ProductCatalog />} />
-          <Route path="product/:id" element={<ProductDetail />} />
+          <Route path="product/:id" element={<ErrorBoundary><ProductDetail /></ErrorBoundary>} />
           <Route path="bag" element={<AuthGuard><ShoppingBag /></AuthGuard>} />
-          <Route path="checkout" element={<AuthGuard><Checkout /></AuthGuard>} />
+          <Route path="checkout" element={<AuthGuard><ErrorBoundary><Checkout /></ErrorBoundary></AuthGuard>} />
           <Route path="wishlist" element={<AuthGuard><Wishlist /></AuthGuard>} />
-          <Route path="profile" element={<Profile />} />
+          <Route path="profile" element={<AuthGuard><Profile /></AuthGuard>} />
           <Route path="our-story" element={<OurStory />} />
           <Route path="size-guide" element={<SizeGuide />} />
           <Route path="contact" element={<Contact />} />
@@ -56,6 +58,7 @@ function App() {
           <Route path="video-consultation" element={<VideoConsultation />} />
           <Route path="terms" element={<Terms />} />
           <Route path="privacy" element={<Privacy />} />
+          <Route path="admin" element={<ErrorBoundary><AdminDashboard /></ErrorBoundary>} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, User, Calendar, CheckCircle, MessageSquare, Send } from 'lucide-react';
+import { api } from '../lib/apiClient';
+import { toast } from 'sonner';
 
 export default function ProductReviews({ productId, user }) {
     const [reviews, setReviews] = useState([]);
@@ -17,14 +19,11 @@ export default function ProductReviews({ productId, user }) {
     useEffect(() => {
         const fetchReviews = async () => {
             try {
-                const BASE = import.meta.env.VITE_API_BASE_URL;
-                const response = await fetch(`${BASE}/api/reviews/${productId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setReviews(data);
-                }
+                const data = await api.get(`/api/v1/reviews/${productId}`);
+                setReviews(data);
             } catch (error) {
                 console.error("Failed to load reviews:", error);
+                // Non-critical, so we don't necessarily toast on load failure
             }
         };
         fetchReviews();
@@ -47,26 +46,21 @@ export default function ProductReviews({ productId, user }) {
 
         const submitReview = async () => {
             try {
-                const BASE = import.meta.env.VITE_API_BASE_URL;
-                await fetch(`${BASE}/api/reviews/${productId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newReview)
-                });
+                await api.post(`/api/v1/reviews/${productId}`, newReview);
+                setReviews(prev => [newReview, ...prev]);
+                setRating(0);
+                setComment('');
+                setIsSubmitting(false);
+                setShowSuccess(true);
+                toast.success("Review published successfully!");
+                setTimeout(() => setShowSuccess(false), 3000);
             } catch (error) {
                 console.error("Failed to submit review:", error);
+                setIsSubmitting(false);
+                toast.error("Failed to submit review. Please try again later.");
             }
         };
         submitReview();
-
-        setTimeout(() => {
-            setReviews(prev => [newReview, ...prev]);
-            setRating(0);
-            setComment('');
-            setIsSubmitting(false);
-            setShowSuccess(true);
-            setTimeout(() => setShowSuccess(false), 3000);
-        }, 800);
     };
 
     const averageRating = reviews.length > 0 
