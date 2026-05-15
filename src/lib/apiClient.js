@@ -20,15 +20,11 @@ class ApiClient {
             headers['Content-Type'] = 'application/json';
         }
 
-        // Automatically inject admin token if present
-        const token = localStorage.getItem('radhamahal_admin_token');
-        if (token && !headers['Authorization']) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
         const config = {
             ...options,
             headers,
+            // Send HttpOnly admin cookie automatically on every request
+            credentials: 'include',
         };
 
         try {
@@ -47,8 +43,7 @@ class ApiClient {
                 const errorMessage = errorData?.message || errorData?.error || `HTTP Error ${response.status}`;
                 
                 if (response.status === 401) {
-                    // Handle unauthorized specifically
-                    localStorage.removeItem('radhamahal_admin_token');
+                    // Handle unauthorized — dispatch event for UI to react
                     window.dispatchEvent(new CustomEvent('unauthorized_access'));
                 }
 

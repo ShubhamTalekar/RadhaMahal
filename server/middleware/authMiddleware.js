@@ -3,15 +3,27 @@ import { JWT_SECRET } from '../config/env.js';
 
 /**
  * Validates that the request has a valid admin JWT.
+ *
+ * Token resolution order:
+ *   1. HttpOnly cookie `admin_token` (primary — XSS-safe)
+ *   2. Authorization: Bearer <token> header (fallback for Postman / programmatic callers)
  */
 export function verifyAdmin(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, message: 'Unauthorized - Missing or invalid token format' });
+    // 1. Try HttpOnly cookie first (set by adminLogin)
+    let token = req.cookies?.admin_token;
+
+    // 2. Fall back to Authorization header
+    if (!token) {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        }
     }
 
-    const token = authHeader.split(' ')[1];
-    
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Unauthorized - Missing authentication' });
+    }
+
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         if (decoded.role !== 'admin') {

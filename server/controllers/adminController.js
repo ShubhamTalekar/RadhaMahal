@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import sharp from 'sharp';
-import { bannerConfig, setBannerConfig, persistStore } from '../utils/store.js';
+import { getBannerConfig as fetchBannerConfig, setBannerConfig as saveBannerConfig } from '../utils/store.js';
 import { paginateCustomers, fetchOrdersByEmail } from '../services/shopify.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { SHOPIFY_ADMIN_TOKEN, ADMIN_PASSWORD, JWT_SECRET } from '../config/env.js';
@@ -21,11 +21,30 @@ export const adminLogin = asyncHandler(async (req, res) => {
     }
 
     const token = jwt.sign({ email, role: 'admin' }, JWT_SECRET, { expiresIn: '12h' });
-    res.json({ success: true, token });
+
+    // Set HttpOnly cookie — not accessible to JavaScript, preventing XSS token theft.
+    // SameSite=Lax allows the cookie to be sent on top-level navigations.
+    // Secure=true ensures it's only sent over HTTPS (NODE_ENV=production).
+    res.cookie('admin_token', token, {
+        httpOnly: true,
+        secure:   process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge:   12 * 60 * 60 * 1000, // 12 hours, matches JWT expiry
+        path:     '/',
+    });
+
+    res.json({ success: true });
+});
+
+/** Clear the admin cookie (logout) */
+export const adminLogout = asyncHandler(async (_req, res) => {
+    res.clearCookie('admin_token', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' });
+    res.json({ success: true });
 });
 
 export const getBannerConfig = asyncHandler(async (req, res) => {
-    res.json({ success: true, data: bannerConfig });
+    const config = await fetchBannerConfig();
+    res.json({ success: true, data: config });
 });
 
 export const updateBannerConfig = asyncHandler(async (req, res) => {
@@ -36,7 +55,8 @@ export const updateBannerConfig = asyncHandler(async (req, res) => {
         imageBase64, marqueeText
     } = req.body;
 
-    let parsedImageUrl = bannerConfig.imageUrl;
+    const currentConfig = await fetchBannerConfig();
+    let parsedImageUrl = currentConfig.imageUrl;
 
     if (req.file) {
         try {
@@ -60,30 +80,28 @@ export const updateBannerConfig = asyncHandler(async (req, res) => {
     }
 
     const newConfig = {
-        ...bannerConfig,
-        titlePrefix:    titlePrefix !== undefined ? titlePrefix : bannerConfig.titlePrefix,
-        titleHighlight: titleHighlight !== undefined ? titleHighlight : bannerConfig.titleHighlight,
-        description:    description !== undefined ? description : bannerConfig.description,
-        buttonText:     buttonText !== undefined ? buttonText : bannerConfig.buttonText,
-        discountNum:    discountNum !== undefined ? discountNum : bannerConfig.discountNum,
-        discountLabel:  discountLabel !== undefined ? discountLabel : bannerConfig.discountLabel,
-        designsNum:     designsNum !== undefined ? designsNum : bannerConfig.designsNum,
-        designsLabel:   designsLabel !== undefined ? designsLabel : bannerConfig.designsLabel,
-        badgeTitle:     badgeTitle !== undefined ? badgeTitle : bannerConfig.badgeTitle,
-        badgeLabel:     badgeLabel !== undefined ? badgeLabel : bannerConfig.badgeLabel,
+        ...currentConfig,
+        titlePrefix:    titlePrefix !== undefined ? titlePrefix : currentConfig.titlePrefix,
+        titleHighlight: titleHighlight !== undefined ? titleHighlight : currentConfig.titleHighlight,
+        description:    description !== undefined ? description : currentConfig.description,
+        buttonText:     buttonText !== undefined ? buttonText : currentConfig.buttonText,
+        discountNum:    discountNum !== undefined ? discountNum : currentConfig.discountNum,
+        discountLabel:  discountLabel !== undefined ? discountLabel : currentConfig.discountLabel,
+        designsNum:     designsNum !== undefined ? designsNum : currentConfig.designsNum,
+        designsLabel:   designsLabel !== undefined ? designsLabel : currentConfig.designsLabel,
+        badgeTitle:     badgeTitle !== undefined ? badgeTitle : currentConfig.badgeTitle,
+        badgeLabel:     badgeLabel !== undefined ? badgeLabel : currentConfig.badgeLabel,
         imageUrl:       parsedImageUrl,
-        marqueeText:    marqueeText !== undefined ? marqueeText : (bannerConfig.marqueeText || "Free shipping all over Maharashtra")
+        marqueeText:    marqueeText !== undefined ? marqueeText : (currentConfig.marqueeText || "Free shipping all over Maharashtra")
     };
 
-    setBannerConfig(newConfig);
-
     try {
-        persistStore();
+        await saveBannerConfig(newConfig);
     } catch (err) {
-        console.error('persistStore failed:', err);
+        console.error('saveBannerConfig failed:', err);
         return res.status(500).json({ success: false, message: 'Failed to save banner config: ' + err.message });
     }
-    res.json({ success: true, message: 'Banner updated successfully', data: bannerConfig });
+    res.json({ success: true, message: 'Banner updated successfully', data: newConfig });
 });
 
 export const getDashboardData = asyncHandler(async (req, res) => {

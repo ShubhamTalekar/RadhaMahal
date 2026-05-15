@@ -128,3 +128,64 @@ export async function fetchCustomerMetafields(customerId) {
     const data = await res.json();
     return data.metafields || [];
 }
+
+/**
+ * GraphQL-based: paginate all customers with their radha_mahal metafields
+ * in a single request per page (eliminates N+1 REST calls).
+ * Yields arrays of { email, metafields: [{key, value}] } for customers that
+ * have at least one radha_mahal metafield.
+ */
+export async function* paginateCustomersWithMetafields() {
+    const { shopifyApiBase: _unused, ..._ } = {}; // just for scoping
+    const shopifyDomain = process.env.VITE_SHOPIFY_DOMAIN || 'radha-mahal-2.myshopify.com';
+    const apiVersion    = process.env.VITE_SHOPIFY_API_VERSION || '2025-01';
+    const graphqlUrl    = `https://${shopifyDomain}/admin/api/${apiVersion}/graphql.json`;
+
+    const query = `
+      query GetCustomersWithMetafields($cursor: String) {
+        customers(first: 250, after: $cursor) {
+          pageInfo { hasNextPage endCursor }
+          edges {
+            node {
+              email
+              metafields(namespace: "radha_mahal", first: 10) {
+                edges {
+                  node { key value }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    let cursor = null;
+    do {
+        const res = await fetch(graphqlUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Shopify-Access-Token': SHOPIFY_ADMIN_TOKEN,
+            },
+            body: JSON.stringify({ query, variables: { cursor } }),
+        });
+
+        const { data, errors } = await res.json();
+        if (errors) {
+            console.error('[Shopify GQL] paginateCustomersWithMetafields error:', errors);
+            break;
+        }
+
+        const customersPage = data?.customers?.edges || [];
+        const pageInfo      = data?.customers?.pageInfo;
+
+        yield customersPage
+            .map(({ node }) => ({
+                email:      node.email,
+                metafields: node.metafields.edges.map(e => e.node),
+            }))
+            .filter(c => c.email && c.metafields.length > 0);
+
+        cursor = pageInfo?.hasNextPage ? pageInfo.endCursor : null;
+    } while (cursor);
+}

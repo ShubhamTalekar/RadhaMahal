@@ -1,4 +1,4 @@
-import { fetchVariantByInventoryItem, fetchProductTitle, paginateCustomers, fetchCustomerMetafields } from '../services/shopify.js';
+import { fetchVariantByInventoryItem, fetchProductTitle, paginateCustomersWithMetafields } from '../services/shopify.js';
 import { createGmailTransporter, sendOOSEmails } from '../services/email.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { SHOPIFY_ADMIN_TOKEN } from '../config/env.js';
@@ -28,23 +28,23 @@ export const handleInventoryUpdate = asyncHandler(async (req, res) => {
 
     console.log(`[OOS] "${productTitle}" (id: ${productId}) is now out of stock.`);
 
+    // Single batched GraphQL query — fetches all customers WITH their metafields
+    // in pages of 250, eliminating the N+1 per-customer REST calls.
     const emailsToNotify = new Set();
-    for await (const customers of paginateCustomers('id,email')) {
-        await Promise.all(customers.map(async c => {
-            if (!c.email) return;
-            const metafields = await fetchCustomerMetafields(c.id);
+    for await (const customers of paginateCustomersWithMetafields()) {
+        for (const { email, metafields } of customers) {
             for (const mf of metafields) {
                 if (mf.key === 'wishlist' || mf.key === 'bag') {
                     try {
                         const items = JSON.parse(mf.value);
                         if (Array.isArray(items) && items.some(i => String(i.id) === productId)) {
-                            emailsToNotify.add(c.email);
-                            console.log(`[OOS] Match: ${c.email}`);
+                            emailsToNotify.add(email);
+                            console.log(`[OOS] Match: ${email}`);
                         }
                     } catch { /* ignore parse errors */ }
                 }
             }
-        }));
+        }
     }
 
     if (emailsToNotify.size === 0) { console.log('[OOS] No users to notify.'); return res.status(200).json({ notified: 0 }); }

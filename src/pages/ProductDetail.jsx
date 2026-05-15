@@ -192,15 +192,30 @@ export default function ProductDetail() {
                     </header>
                     {product.descriptionHtml ? (
                         <div 
-                            className="text-on-surface-variant text-sm md:text-base leading-relaxed font-light prose prose-sm md:prose-base max-w-none prose-p:mb-4 prose-a:text-secondary"
+                            className="text-on-surface/90 text-xs md:text-sm leading-loose font-light prose prose-sm md:prose-base max-w-none prose-p:mb-4 prose-a:text-secondary"
                             dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} 
                         />
                     ) : product.description ? (
-                        <p className="text-on-surface-variant text-base md:text-lg leading-relaxed font-light whitespace-pre-line">
-                            {product.description}
-                        </p>
+                        <div className="space-y-5 text-on-surface/90 text-xs md:text-sm leading-loose font-light">
+                            {product.description.split('\n').map(l => l.trim()).filter(Boolean).map((line, idx) => {
+                                if (line.toLowerCase().includes('key features')) {
+                                    return <h4 key={idx} className="text-base font-headline text-secondary mt-8 mb-2 border-b border-secondary/20 pb-2 inline-block">{line}</h4>;
+                                }
+                                if (line.includes(':') && line.split(':')[0].length < 40) {
+                                    const [title, ...rest] = line.split(':');
+                                    if (rest.join(':').trim()) {
+                                        return (
+                                            <p key={idx} className="ml-2 border-l-2 border-secondary/30 pl-4 py-1 bg-surface-container-low/50 rounded-r-lg pr-4">
+                                                <strong className="font-medium text-secondary tracking-wide">{title}:</strong> {rest.join(':')}
+                                            </p>
+                                        );
+                                    }
+                                }
+                                return <p key={idx} className="text-justify leading-relaxed">{line}</p>;
+                            })}
+                        </div>
                     ) : (
-                        <p className="text-on-surface-variant text-base md:text-lg leading-relaxed font-light">
+                        <p className="text-on-surface/90 text-xs md:text-sm leading-loose font-light text-justify">
                             A masterpiece of {product.fabric || 'silk'} designed for {(product.occasion || []).join(' and ').toLowerCase() || 'special'} celebrations. Each thread tells a story of exquisite craftsmanship.
                         </p>
                     )}

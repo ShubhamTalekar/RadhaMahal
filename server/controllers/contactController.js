@@ -1,12 +1,14 @@
 import { findCustomerByEmail, createCustomer, updateCustomer } from '../services/shopify.js';
 import { createGmailTransporter, sendContactEmails } from '../services/email.js';
-import { validateFields } from '../utils/validation.js';
+import { validate } from '../utils/validation.js';
+import { contactSchema } from '../validators/schemas.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { SHOPIFY_ADMIN_TOKEN } from '../config/env.js';
 
 export const submitContact = asyncHandler(async (req, res) => {
-    const { name, email, subject, message } = req.body;
-    if (!validateFields({ name, email, subject, message }, res)) return;
+    const parsed = validate(contactSchema, req.body, res);
+    if (!parsed) return;
+    const { name, email, subject, message } = parsed;
     if (!SHOPIFY_ADMIN_TOKEN) return res.status(500).json({ success: false, message: 'Shopify Admin token not configured.' });
 
     const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });

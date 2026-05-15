@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url>
+    <loc>https://radhamahal.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Product Catalog / Collection -->
+  <url>
+    <loc>https://radhamahal.com/collection</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Our Story -->
+  <url>
+    <loc>https://radhamahal.com/our-story</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Contact -->
+  <url>
+    <loc>https://radhamahal.com/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Video Consultation -->
+  <url>
+    <loc>https://radhamahal.com/consultation</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Login -->
+  <url>
+    <loc>https://radhamahal.com/login</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <!-- Register -->
+  <url>
+    <loc>https://radhamahal.com/register</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <!--
+    NOTE: Individual product pages (e.g. /product/:id) are dynamic.
+    For a complete sitemap, generate these at build time from the Shopify
+    product catalog using a script or Vite plugin. The static pages above
+    cover the core content that search engines need to discover.
+  -->
+</urlset>

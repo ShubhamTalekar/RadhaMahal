@@ -20,6 +20,43 @@ Radha Mahal is a premium digital atelier for handcrafted Indian sarees and dress
 
 ---
 
+## 🏗 Architecture
+
+```
+                      ┌─────────────────────────────────────────────┐
+                      │          Browser / React SPA (Vite)         │
+                      │  src/  ─ React Router ─ Tailwind CSS        │
+                      │  Context: CartContext, AuthContext           │
+                      └───────────────┬────────────────┬────────────┘
+                                      │ Storefront API │ /api/v1/…
+                       (GraphQL)      │                │ (REST/JSON)
+                      ┌──────────────▼──┐   ┌──────────▼──────────────┐
+                      │  Shopify CDN    │   │  Express Bridge Server  │
+                      │  Storefront API │   │  server/  (Node.js)     │
+                      │  (products,     │   │                         │
+                      │   cart, auth)   │   │  ├ /api/contact         │
+                      └─────────────────┘   │  ├ /api/consultation    │
+                                            │  ├ /api/gauth/sync      │
+                      ┌─────────────────┐   │  ├ /api/wishlist/sync   │
+                      │  Shopify Admin  │◄──┤  ├ /api/bag/sync        │
+                      │  REST API       │   │  ├ /api/track/:order    │
+                      │  (customers,    │   │  ├ /api/reviews/:id     │
+                      │   metafields,   │   │  ├ /api/admin/*         │
+                      │   orders,       │   │  └ /api/webhooks/*      │
+                      │   webhooks)     │   │                         │
+                      └─────────────────┘   │  Services:             │
+                                            │  ├ Nodemailer (Gmail)   │
+                      ┌─────────────────┐   │  └ Supabase (store DB)  │
+                      │  Supabase       │◄──┘                         │
+                      │  (reviews,      │                             │
+                      │   bannerConfig) │                             │
+                      └─────────────────┘                             │
+```
+
+**API Docs:** When the server is running, visit [`http://localhost:5001/api-docs`](http://localhost:5001/api-docs) for the interactive Swagger UI.
+
+---
+
 ## 🛠 Tech Stack
 
 | Layer | Technology |
@@ -30,6 +67,9 @@ Radha Mahal is a premium digital atelier for handcrafted Indian sarees and dress
 | Backend | Node.js + Express |
 | Email | Nodemailer (Gmail) |
 | E-commerce | Shopify Storefront & Admin APIs |
+| Database | Supabase (reviews & banner config) |
+| Process Manager | PM2 (cluster mode) |
+| Error Tracking | Sentry |
 | Routing | React Router DOM |
 
 ---
@@ -39,6 +79,7 @@ Radha Mahal is a premium digital atelier for handcrafted Indian sarees and dress
 ### Prerequisites
 - Node.js v18+
 - A Shopify store with Storefront API access
+- A Supabase project (for reviews & banner config persistence)
 
 ### Installation
 
@@ -58,31 +99,52 @@ cd ..
 
 ### Environment Variables
 
-Create a `.env` file in the root and in the `/server` directory:
+Copy the examples and fill in your values:
 
-**Root `.env`**
-```env
-VITE_SHOPIFY_STORE_URL=your-store.myshopify.com
-VITE_SHOPIFY_STOREFRONT_API_TOKEN=your_storefront_token
-VITE_API_BASE_URL=http://localhost:3001
+```bash
+cp .env.example .env.local
+cp server/.env.example server/.env
 ```
 
-**Server `.env`**
+**Root `.env.local`** (frontend + shared)
 ```env
-SHOPIFY_STORE_URL=your-store.myshopify.com
-SHOPIFY_ADMIN_API_TOKEN=your_admin_token
-GMAIL_USER=your@gmail.com
-GMAIL_PASS=your_app_password
+VITE_SHOPIFY_DOMAIN=your-store.myshopify.com
+VITE_SHOPIFY_STOREFRONT_TOKEN=your_storefront_token
+VITE_API_BASE_URL=http://localhost:5001
+VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+VITE_WHATSAPP_NUMBER=919xxxxxxxxx
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SENTRY_DSN=your_sentry_frontend_dsn   # optional
 ```
+
+**Server `.env`** (backend only — never expose to browser)
+```env
+PORT=5001
+NODE_ENV=development
+SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_xxxx
+SHOPIFY_WEBHOOK_SECRET=your_webhook_secret
+EMADMIN_EMAIL=your@gmail.com
+EMAIL_PASS=your_gmail_app_password
+CORS_ORIGINS=http://localhost:5173
+JWT_SECRET=your_jwt_secret
+ADMIN_PASSWORD=your_admin_password
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SENTRY_DSN=your_sentry_backend_dsn         # optional
+```
+
+> **Supabase setup:** Run `server/supabase_schema.sql` in the Supabase SQL Editor once to create the required tables.
 
 ### Running Locally
 
 ```bash
-# Start the backend server
-cd server && node index.js
+# Start both frontend and backend together
+npm run dev:all
 
-# In a new terminal, start the frontend
-npm run dev
+# Or start them separately:
+npm run dev          # Vite dev server  → http://localhost:5173
+npm run server       # Express server   → http://localhost:5001
 ```
 
 ---
@@ -91,15 +153,25 @@ npm run dev
 
 ```
 RadhaMahal/
-├── public/              # Static assets & images
+├── .github/workflows/    # CI/CD — lint, build, audit on every PR
+├── public/               # Static assets & images
 ├── src/
-│   ├── components/      # Reusable UI components
-│   ├── context/         # React context (Cart, Auth, etc.)
-│   ├── App.jsx          # Root app with routing
-│   ├── OurStory.jsx     # Our Story page
-│   └── ...              # Other pages
+│   ├── components/       # Reusable UI components
+│   ├── context/          # React context (Cart, Auth, Wishlist, Bag)
+│   ├── instrument.js     # Sentry frontend initialization (first import)
+│   ├── App.jsx           # Root app with routing
+│   └── ...               # Page components
 ├── server/
-│   └── index.js         # Express backend (email, Shopify proxy)
+│   ├── config/           # env.js, shopify.js, swagger.js
+│   ├── controllers/      # Route handler logic
+│   ├── middleware/        # Auth, rate limiting, webhook HMAC
+│   ├── routes/           # Express routers + openapi.js (JSDoc)
+│   ├── services/         # Shopify API, email helpers
+│   ├── utils/            # store.js (Supabase), asyncHandler, escape
+│   ├── ecosystem.config.cjs  # PM2 cluster config
+│   └── index.js          # Entry point (Sentry → app.listen)
+├── render.yaml           # Render.com deployment blueprint
+├── RUNBOOK.md            # Incident response & rollback guide
 └── vite.config.js
 ```
 

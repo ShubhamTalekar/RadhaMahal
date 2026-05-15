@@ -3,10 +3,13 @@ import { GraphQLClient, gql } from 'graphql-request';
 const domain = import.meta.env.VITE_SHOPIFY_DOMAIN || 'radha-mahal-2.myshopify.com';
 const storefrontToken = import.meta.env.VITE_SHOPIFY_STOREFRONT_TOKEN;
 
-// Connect directly to the Shopify Storefront API from the browser.
-// The public token is safe to expose in frontend code.
+/**
+ * Shopify Storefront API tokens are intentionally public
+ * and safe to expose in the frontend bundle.
+ * This is NOT equivalent to the Shopify Admin API token.
+ */
 const SHOPIFY_API_VERSION = import.meta.env.VITE_SHOPIFY_API_VERSION || '2025-01';
-const endpoint = `https://${domain}/api/v1/${SHOPIFY_API_VERSION}/graphql.json`;
+const endpoint = `https://${domain}/api/${SHOPIFY_API_VERSION}/graphql.json`;
 
 const client = new GraphQLClient(endpoint, {
   headers: {

@@ -1,36 +1,22 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname  = path.dirname(__filename);
+dotenv.config();
 
-const DB_FILE      = path.resolve(__dirname, '../store.json');
-const EXAMPLE_FILE = path.resolve(__dirname, '../store.example.json');
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let supabase = null;
 
-// ─── Auto-bootstrap ──────────────────────────────────────────────────────────
-// On first run (store.json missing), copy from store.example.json or create empty.
-if (!fs.existsSync(DB_FILE)) {
-    if (fs.existsSync(EXAMPLE_FILE)) {
-        fs.copyFileSync(EXAMPLE_FILE, DB_FILE);
-        console.log('[Store] store.json created from store.example.json');
-    } else {
-        fs.writeFileSync(DB_FILE, JSON.stringify({ reviewsStore: {}, bannerConfig: null }, null, 2));
-        console.log('[Store] store.json bootstrapped with defaults');
-    }
+if (supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('[Store] Supabase configured for persistent storage.');
+} else {
+    console.warn('[Store] ⚠️ Supabase not configured. Falling back to ephemeral memory (data will be lost on restart in cluster mode).');
 }
 
-// ─── Load initial state ───────────────────────────────────────────────────────
-let _parsed = {};
-try {
-    _parsed = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-} catch (err) {
-    console.error('[Store] Error reading store.json — starting with empty state', err);
-}
-
-export const reviewsStore = _parsed.reviewsStore || {};
-
-export let bannerConfig = _parsed.bannerConfig || {
+// Fallback in-memory state
+let _memReviewsStore = {};
+let _memBannerConfig = {
     titlePrefix:    'Wedding &',
     titleHighlight: 'Festive Collection ' + new Date().getFullYear(),
     description:    'Make every celebration unforgettable with our exclusive festive collection. Curated designs perfect for weddings, Diwali, and special occasions.',
@@ -45,12 +31,43 @@ export let bannerConfig = _parsed.bannerConfig || {
     marqueeText:    'Free shipping all over Maharashtra',
 };
 
-/** Persist the current in-memory state to disk */
-export function persistStore() {
-    fs.writeFileSync(DB_FILE, JSON.stringify({ reviewsStore, bannerConfig }, null, 2));
+export async function getReviewsStore() {
+    if (!supabase) return _memReviewsStore;
+    const { data, error } = await supabase.from('store_data').select('data').eq('id', 'reviewsStore').single();
+    if (error) {
+        if (error.code === 'PGRST116') return {}; // Not found
+        console.error('[Store] Error fetching reviews from Supabase:', error);
+        return _memReviewsStore;
+    }
+    return data?.data || {};
 }
 
-/** Replace the in-memory bannerConfig (call persistStore() after) */
-export function setBannerConfig(config) {
-    bannerConfig = config;
+export async function setReviewsStore(store) {
+    if (!supabase) {
+        _memReviewsStore = store;
+        return;
+    }
+    const { error } = await supabase.from('store_data').upsert({ id: 'reviewsStore', data: store });
+    if (error) console.error('[Store] Error saving reviews to Supabase:', error);
 }
+
+export async function getBannerConfig() {
+    if (!supabase) return _memBannerConfig;
+    const { data, error } = await supabase.from('store_data').select('data').eq('id', 'bannerConfig').single();
+    if (error) {
+        if (error.code === 'PGRST116') return _memBannerConfig; // Not found
+        console.error('[Store] Error fetching banner config from Supabase:', error);
+        return _memBannerConfig;
+    }
+    return data?.data || _memBannerConfig;
+}
+
+export async function setBannerConfig(config) {
+    if (!supabase) {
+        _memBannerConfig = config;
+        return;
+    }
+    const { error } = await supabase.from('store_data').upsert({ id: 'bannerConfig', data: config });
+    if (error) console.error('[Store] Error saving banner config to Supabase:', error);
+}
+

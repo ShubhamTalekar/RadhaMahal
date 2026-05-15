@@ -9,11 +9,11 @@ export default function SEO({
     type = 'website'
 }) {
     const location = useLocation();
-    const siteUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-    // For local dev, window.location.origin is localhost. For production, siteUrl should be the canonical domain.
-    // Ideally, we'd use a dedicated canonical domain env var, but siteUrl works.
-    const canonicalDomain = "https://radhamahal.com"; // hardcoding production domain for canonicals is safest to avoid localhost leaking in prod builds.
-    const canonicalUrl = `${canonicalDomain}${location.pathname}`;
+    // VITE_SITE_URL is the canonical frontend domain (e.g. https://radhamahal.com).
+    // Falls back to window.location.origin for local dev.
+    // Do NOT use VITE_API_BASE_URL here — that's the API server, not the frontend.
+    const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+    const canonicalUrl = `${siteUrl}${location.pathname}`;
 
     return (
         <Helmet>

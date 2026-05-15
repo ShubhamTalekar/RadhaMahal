@@ -7,8 +7,34 @@ import { NextArrow, PrevArrow } from '../SliderArrow';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-export function NewArrivals({ newArrivals = [], wishlist = [], setWishlist }) {
-  if (!newArrivals || newArrivals.length === 0) return null;
+export function NewArrivals({ newArrivals = [], wishlist = [], setWishlist, loading = false }) {
+  // Show skeleton cards while loading
+  if (loading || (!newArrivals || newArrivals.length === 0)) {
+    return (
+      <section className="py-12 md:py-24 bg-gradient-to-b from-[#fdfbf7] to-[#f5f1ed] relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-8 md:mb-16">
+            <span className="text-[#d4af37] tracking-[0.3em] mb-4 block font-bold text-sm">JUST ARRIVED</span>
+            <h2 className="text-4xl md:text-7xl text-primary mb-4 font-bold">
+              New <span className="bg-gradient-to-r from-[#d4af37] via-[#f4d56f] to-[#d4af37] bg-clip-text text-transparent">Arrivals</span>
+            </h2>
+            <div className="w-32 h-1 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent mx-auto"></div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 animate-pulse">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl overflow-hidden bg-white shadow-lg">
+                <div className="aspect-[3/4] bg-gradient-to-br from-[#f0ece6] to-[#e8e3dc]" />
+                <div className="p-4 space-y-2 border-t-4 border-[#d4af37]/20">
+                  <div className="h-4 bg-[#e8e3dc] rounded w-3/4" />
+                  <div className="h-4 bg-[#d4af37]/20 rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const toggleWishlist = (product) => {
     const isProductInWishlist = wishlist?.some(item => item.id === product.id);

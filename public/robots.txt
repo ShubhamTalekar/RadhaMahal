@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /admin
+Disallow: /admin-login
+Disallow: /api-docs
+
+Sitemap: https://radhamahal.in/sitemap.xml

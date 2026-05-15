@@ -100,12 +100,30 @@ export default function Home() {
 
     if (loading) {
         return (
-            <main className="min-h-screen flex items-center justify-center">
+            <main>
                 <SEO />
-                <div className="flex flex-col items-center animate-pulse">
-                    <span className="material-symbols-outlined text-[#e9c349] text-5xl animate-spin mb-4" style={{ fontVariationSettings: "'FILL' 0, 'wght' 200" }}>sync</span>
-                    <p className="text-secondary font-headline tracking-widest uppercase text-xs">Curating Collection...</p>
-                </div>
+                {/* Hero skeleton */}
+                <section className="relative h-[80vh] bg-gradient-to-br from-[#250624] to-[#3f1e3c] animate-pulse">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center px-8">
+                        <div className="h-4 w-48 bg-[#e9c349]/20 rounded mb-6" />
+                        <div className="h-12 w-80 bg-[#e9c349]/15 rounded mb-4" />
+                        <div className="h-6 w-64 bg-white/10 rounded mb-8" />
+                        <div className="h-12 w-44 bg-[#e9c349]/20 rounded-full" />
+                    </div>
+                </section>
+                {/* Category skeleton */}
+                <section className="py-16 bg-[#fdfbf7]">
+                    <div className="container mx-auto px-4">
+                        <div className="h-8 w-56 bg-[#e8e3dc] rounded mx-auto mb-10 animate-pulse" />
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="aspect-square bg-gradient-to-br from-[#f0ece6] to-[#e8e3dc] rounded-2xl" />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+                {/* NewArrivals skeleton is handled by the component itself */}
+                <FigmaNewArrivals newArrivals={[]} loading={true} wishlist={wishlist} setWishlist={setWishlist} />
             </main>
         );
     }
@@ -125,7 +143,7 @@ export default function Home() {
             <SEO />
             <HeroSection slides={slides} />
             <FeaturedCategories categories={categories} />
-            <FigmaNewArrivals newArrivals={newArrivals} wishlist={wishlist} setWishlist={setWishlist} />
+            <FigmaNewArrivals newArrivals={newArrivals} loading={false} wishlist={wishlist} setWishlist={setWishlist} />
             <OurStorySection />
             <Testimonials />
             <FestiveBanner />

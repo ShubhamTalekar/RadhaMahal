@@ -10,7 +10,7 @@ const limitHandler = (req, res, next, options) => {
 
 export const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10,
+    max: 5,
     message: 'Too many login attempts, please try again after 15 minutes',
     handler: limitHandler,
 });

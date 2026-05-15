@@ -1,19 +1,20 @@
-import { reviewsStore, persistStore } from '../utils/store.js';
+import { getReviewsStore, setReviewsStore } from '../utils/store.js';
 import { esc } from '../utils/escape.js';
+import { validate } from '../utils/validation.js';
+import { reviewSchema } from '../validators/schemas.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const getReviews = asyncHandler(async (req, res) => {
     const { productId } = req.params;
-    res.json(reviewsStore[productId] || []);
+    const store = await getReviewsStore();
+    res.json(store[productId] || []);
 });
 
 export const addReview = asyncHandler(async (req, res) => {
     const { productId }       = req.params;
-    const { author, rating, comment } = req.body;
-
-    if (!author || !comment || !rating)                         return res.status(400).json({ success: false, message: 'Missing review fields' });
-    if (typeof rating !== 'number' || rating < 1 || rating > 5) return res.status(400).json({ success: false, message: 'Rating must be 1-5' });
-    if (comment.length > 1000)                                  return res.status(400).json({ success: false, message: 'Comment too long' });
+    const parsed = validate(reviewSchema, req.body, res);
+    if (!parsed) return;
+    const { author, rating, comment } = parsed;
 
     const safeReview = {
         author:  esc(String(author).slice(0, 100)),
@@ -22,8 +23,10 @@ export const addReview = asyncHandler(async (req, res) => {
         date:    new Date().toISOString(),
     };
 
-    if (!reviewsStore[productId]) reviewsStore[productId] = [];
-    reviewsStore[productId].unshift(safeReview);
-    persistStore();
+    const store = await getReviewsStore();
+    if (!store[productId]) store[productId] = [];
+    store[productId].unshift(safeReview);
+    
+    await setReviewsStore(store);
     res.status(201).json({ success: true, review: safeReview });
 });

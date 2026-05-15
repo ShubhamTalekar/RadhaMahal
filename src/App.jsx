@@ -21,6 +21,7 @@ import Privacy from './pages/Privacy';
 import AuthGuard from './components/AuthGuard';
 import SplashScreen from './pages/SplashScreen';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminLogin from './pages/AdminLogin';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
 
@@ -58,6 +59,7 @@ function App() {
           <Route path="video-consultation" element={<VideoConsultation />} />
           <Route path="terms" element={<Terms />} />
           <Route path="privacy" element={<Privacy />} />
+          <Route path="admin/login" element={<AdminLogin />} />
           <Route path="admin" element={<ErrorBoundary><AdminDashboard /></ErrorBoundary>} />
         </Route>
       </Routes>

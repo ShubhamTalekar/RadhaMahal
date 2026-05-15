@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: radha-mahal
+    env: node
+    plan: starter
+    region: singapore # Adjust as needed
+    buildCommand: "npm install && npm run build && cd server && npm install"
+    startCommand: "cd server && npm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
+      - key: VITE_SHOPIFY_DOMAIN
+        sync: false
+      - key: VITE_SHOPIFY_STOREFRONT_TOKEN
+        sync: false
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: SHOPIFY_ADMIN_ACCESS_TOKEN
+        sync: false
+      - key: SHOPIFY_WEBHOOK_SECRET
+        sync: false
+      - key: EMADMIN_EMAIL
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: VITE_SENTRY_DSN
+        sync: false
+      - key: VITE_SITE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

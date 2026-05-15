@@ -17,30 +17,6 @@ export default function Login() {
         setLoading(true);
         setAuthError('');
 
-        if (credentials.email === 'admin@radhamahal.com' || credentials.email === 'admin@admin.com') {
-            try {
-                const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
-                const res = await fetch(`${BASE}/api/v1/admin/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: 'admin@radhamahal.com', password: credentials.password })
-                });
-                const data = await res.json();
-                
-                if (res.ok && data.success) {
-                    localStorage.setItem('radhamahal_admin_token', data.token);
-                    setUser({ name: 'Concierge Admin', email: 'admin@radhamahal.com', isAdmin: true });
-                    navigate('/admin');
-                } else {
-                    setAuthError(data.message || 'Invalid admin credentials');
-                }
-            } catch (err) {
-                setAuthError('Failed to connect to server');
-            }
-            setLoading(false);
-            return;
-        }
-
         const { customer, error } = await loginCustomer(credentials.email, credentials.password);
 
         if (error) {
@@ -70,7 +46,7 @@ export default function Login() {
 
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
-            const decoded = jwtDecode(credentialResponse.credential);
+            const { name, sub, email } = jwtDecode(credentialResponse.credential);
             const nameParts = name ? name.split(' ') : ['Google', 'User'];
             const firstName = nameParts[0];
             const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Patron';

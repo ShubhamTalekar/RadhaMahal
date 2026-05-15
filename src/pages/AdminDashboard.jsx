@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { Package, Users, Activity, LogOut, CheckCircle, Trash2, Heart, RefreshCw, Type } from 'lucide-react';
+import { adminLogout, isAdminAuthenticated } from '../lib/auth';
 
 export default function AdminDashboard() {
     const { user, setUser } = useApp();
@@ -45,7 +46,6 @@ export default function AdminDashboard() {
         setSavingBanner(true);
         try {
             const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
-            const token = localStorage.getItem('radhamahal_admin_token');
             
             const formData = new FormData();
             formData.append('titlePrefix', bannerConfig.titlePrefix);
@@ -66,9 +66,7 @@ export default function AdminDashboard() {
 
             const response = await fetch(`${BASE}/api/v1/admin/banner`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
+                credentials: 'include',
                 body: formData
             });
             const data = await response.json();
@@ -88,22 +86,21 @@ export default function AdminDashboard() {
     };
 
     useEffect(() => {
-        if (!user || user.email !== 'admin@radhamahal.com') {
-            navigate('/login');
+        if (!isAdminAuthenticated()) {
+            navigate('/admin/login');
             return;
         }
 
         const fetchDashboardData = async () => {
             try {
                 const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
-                const token = localStorage.getItem('radhamahal_admin_token');
                 const response = await fetch(`${BASE}/api/v1/admin/dashboard`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    credentials: 'include',
                 });
                 
                 if (response.status === 401) {
-                    const errorData = await response.json();
-                    setErrorMsg(errorData.error || 'Invalid Shopify Admin Access Token');
+                    await adminLogout();
+                    navigate('/admin/login');
                     return;
                 }
 
@@ -123,7 +120,8 @@ export default function AdminDashboard() {
         fetchDashboardData();
     }, [user, navigate]);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await adminLogout();
         setUser(null);
         navigate('/');
     };
@@ -133,13 +131,10 @@ export default function AdminDashboard() {
         
         try {
             const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
-            const token = localStorage.getItem('radhamahal_admin_token');
             const response = await fetch(`${BASE}/api/v1/admin/users/delete`, {
                 method: 'DELETE',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ email })
             });
             if (response.ok) {
