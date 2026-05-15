@@ -27,8 +27,8 @@ app.set('trust proxy', 1);
 // Security: Timeout requests after 15s to prevent slowloris
 app.use(timeout('15s'));
 
-// Security: Helmet headers
-app.use(helmet());
+// Security: Helmet headers (disable CSP to allow Vite/Cloudflare inline scripts)
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // Logging: Pino HTTP logger
 app.use(pinoHttp({
