@@ -20,7 +20,7 @@ const client = new GraphQLClient(endpoint, {
 
 const PRODUCTS_QUERY = gql`
   query getProducts($first: Int!) {
-    products(first: $first) {
+    products(first: $first, sortKey: CREATED_AT, reverse: true) {
       edges {
         node {
           id
@@ -29,6 +29,13 @@ const PRODUCTS_QUERY = gql`
           descriptionHtml
           productType
           tags
+          collections(first: 10) {
+            edges {
+              node {
+                title
+              }
+            }
+          }
           variants(first: 50) {
             edges {
               node {
@@ -68,8 +75,8 @@ function shapeProduct(node) {
   const compareAtPrice = parseFloat(variant?.compareAtPrice?.amount ?? price);
   const numericId = node.id.split('/').pop();
   const tags = node.tags ?? [];
+  const collections = node.collections?.edges.map(e => e.node.title) || [];
   const colorTags = tags.filter(t => t.toLowerCase().startsWith('color:')).map(t => t.replace(/^color:/i, '').trim());
-  const occasionTags = tags.filter(t => t.toLowerCase().startsWith('occasion:')).map(t => t.replace(/^occasion:/i, '').trim());
 
   return {
     id: numericId,
@@ -82,7 +89,7 @@ function shapeProduct(node) {
     final_price: price,
     discount_percent: compareAtPrice > price ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100) : 0,
     colors: colorTags.length ? colorTags : tags,
-    occasion: occasionTags.length ? occasionTags : tags,
+    occasion: collections,
     images: node.images.edges.map(e => e.node.url),
     defaultVariantId: node.variants.edges[0]?.node.id ?? null,
     variants: node.variants.edges
@@ -126,6 +133,13 @@ const PRODUCT_BY_ID_QUERY = gql`
       descriptionHtml
       productType
       tags
+      collections(first: 10) {
+        edges {
+          node {
+            title
+          }
+        }
+      }
       variants(first: 50) {
         edges {
           node {

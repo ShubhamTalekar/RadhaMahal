@@ -80,6 +80,7 @@ export default function ProductCatalog() {
             const lower = tag.toLowerCase();
             if (isColorTag(tag)) return false; // It's a color
             if (lower === 'carousel' || lower === 'hero') return false; // System tags
+            if (lower === 'automated collection' || lower === 'home page') return false; // System collections
             if (lower.includes('silk') || lower.includes('saree') || lower.includes('zari')) return false; // Fabrics/Types
             return true; // Keep the rest as actual occasions
         }).sort();
@@ -190,7 +191,7 @@ export default function ProductCatalog() {
                                             setCurrentPage(1);
                                         }}
                                         style={{ backgroundColor: mappedColor }}
-                                        className={`w-8 h-8 rounded-full border border-white/20 transition-all duration-300 ${selectedColors.includes(c) ? 'ring-offset-2 ring-offset-[#250624] ring-2 ring-[#e9c349] shadow-[0_0_15px_rgba(233,195,73,0.5)] scale-110' : 'opacity-70 hover:opacity-100 hover:scale-110 hover:shadow-lg hover:border-white/40'}`}
+                                        className={`w-8 h-8 rounded-full transition-all duration-300 ${mappedColor === '#ffffff' ? 'border border-black' : 'border border-white/20'} ${selectedColors.includes(c) ? 'ring-offset-2 ring-offset-[#250624] ring-2 ring-[#e9c349] shadow-[0_0_15px_rgba(233,195,73,0.5)] scale-110' : 'opacity-70 hover:opacity-100 hover:scale-110 hover:shadow-lg hover:border-white/40'}`}
                                         title={c}
                                     />
                                 );
