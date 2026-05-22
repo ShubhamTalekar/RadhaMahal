@@ -11,14 +11,14 @@ import adminRoutes from './admin.js';
 // openapi.js is a JSDoc-only file scanned by swagger-jsdoc via config/swagger.js
 
 export function registerRoutes(app) {
-    app.use('/api', contactRoutes);
-    app.use('/api', consultationRoutes);
-    app.use('/api', authRoutes);
-    app.use('/api', wishlistRoutes);
-    app.use('/api', bagRoutes);
-    app.use('/api', webhooksRoutes);
-    app.use('/api', ordersRoutes);
-    app.use('/api', notificationsRoutes);
-    app.use('/api', reviewsRoutes);
-    app.use('/api', adminRoutes);
+    app.use('/', contactRoutes);
+    app.use('/', consultationRoutes);
+    app.use('/', authRoutes);
+    app.use('/', wishlistRoutes);
+    app.use('/', bagRoutes);
+    app.use('/', webhooksRoutes);
+    app.use('/', ordersRoutes);
+    app.use('/', notificationsRoutes);
+    app.use('/', reviewsRoutes);
+    app.use('/', adminRoutes);
 }

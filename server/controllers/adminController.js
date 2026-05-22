@@ -7,7 +7,7 @@ import sharp from 'sharp';
 import { getBannerConfig as fetchBannerConfig, setBannerConfig as saveBannerConfig } from '../utils/store.js';
 import { paginateCustomers, fetchOrdersByEmail } from '../services/shopify.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { SHOPIFY_ADMIN_TOKEN, ADMIN_PASSWORD, JWT_SECRET } from '../config/env.js';
+import { SHOPIFY_ADMIN_TOKEN, ADMIN_PASSWORD, JWT_SECRET, EMADMIN_EMAIL } from '../config/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -15,8 +15,18 @@ const __dirname  = path.dirname(__filename);
 export const adminLogin = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     
+    console.log('--- ADMIN LOGIN ATTEMPT ---');
+    console.log('Received email:', email);
+    console.log('Received password:', password);
+    console.log('Expected email:', 'admin@radhamahal.com');
+    console.log('Expected password:', ADMIN_PASSWORD);
+    console.log('---------------------------');
+
+    const allowedEmails = ['admin@radhamahal.com'];
+    if (EMADMIN_EMAIL) allowedEmails.push(EMADMIN_EMAIL);
+
     // Simplistic auth since there's only one admin user
-    if (email !== 'admin@radhamahal.com' || password !== ADMIN_PASSWORD) {
+    if (!allowedEmails.includes(email) || password !== ADMIN_PASSWORD) {
         return res.status(401).json({ success: false, message: 'Invalid admin credentials' });
     }
 
@@ -106,7 +116,7 @@ export const updateBannerConfig = asyncHandler(async (req, res) => {
 
 export const getDashboardData = asyncHandler(async (req, res) => {
     if (!SHOPIFY_ADMIN_TOKEN || SHOPIFY_ADMIN_TOKEN === 'dummy_token') {
-        return res.status(401).json({ success: false, error: 'Shopify Admin Token not configured in .env' });
+        return res.status(502).json({ success: false, error: 'Shopify Admin Token not configured in .env' });
     }
 
     const users = [];
@@ -131,7 +141,7 @@ export const getDashboardData = asyncHandler(async (req, res) => {
     const ordersRes = await fetch(url, { headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': SHOPIFY_ADMIN_TOKEN } });
 
     if (ordersRes.status === 401 || ordersRes.status === 403) {
-        return res.status(401).json({ success: false, error: 'Invalid Shopify Admin Access Token' });
+        return res.status(502).json({ success: false, error: 'Invalid Shopify Admin Access Token' });
     }
 
     const ordersData = await ordersRes.json();

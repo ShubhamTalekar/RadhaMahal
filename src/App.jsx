@@ -14,6 +14,7 @@ import SizeGuide from './pages/SizeGuide';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Activate from './pages/Activate';
 import VideoConsultation from './pages/VideoConsultation';
 import FAQ from './pages/FAQ';
 import Terms from './pages/Terms';
@@ -23,6 +24,7 @@ import SplashScreen from './pages/SplashScreen';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import NotFound from './pages/NotFound';
 import './index.css';
 
 function ScrollToTop() {
@@ -55,12 +57,14 @@ function App() {
           <Route path="contact" element={<Contact />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="account/activate" element={<Activate />} />
           <Route path="faq" element={<FAQ />} />
           <Route path="video-consultation" element={<VideoConsultation />} />
           <Route path="terms" element={<Terms />} />
           <Route path="privacy" element={<Privacy />} />
           <Route path="admin/login" element={<AdminLogin />} />
           <Route path="admin" element={<ErrorBoundary><AdminDashboard /></ErrorBoundary>} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>

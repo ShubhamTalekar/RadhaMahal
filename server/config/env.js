@@ -21,7 +21,7 @@ export const NODE_ENV             = process.env.NODE_ENV || 'development';
 
 export const CORS_ORIGINS = process.env.NODE_ENV === 'production'
     ? (process.env.CORS_ORIGINS || 'https://radhamahal.com,https://radhamahal.onrender.com').split(',').map(o => o.trim())
-    : ['http://localhost:5173'];
+    : ['http://localhost:5173', 'http://127.0.0.1:5173'];
 
 export const SHOPIFY_DOMAIN       = process.env.VITE_SHOPIFY_DOMAIN || 'radha-mahal-2.myshopify.com';
 export const SHOPIFY_ADMIN_TOKEN  = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;

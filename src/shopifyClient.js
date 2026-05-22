@@ -535,3 +535,49 @@ export async function getCustomer(accessToken) {
     return null;
   }
 }
+
+// ── Customer Activation (Headless) ──────────────────────────────────────────
+
+const CUSTOMER_ACTIVATE_BY_URL_MUTATION = gql`
+  mutation customerActivateByUrl($activationUrl: URL!, $password: String!) {
+    customerActivateByUrl(activationUrl: $activationUrl, password: $password) {
+      customer {
+        id
+        firstName
+        lastName
+        email
+        phone
+      }
+      customerAccessToken {
+        accessToken
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+/**
+ * Activates a customer account using the activation URL and sets a password.
+ * @param {string} activationUrl The full activation URL received via email.
+ * @param {string} password The new password to set for the account.
+ */
+export async function activateCustomerByUrl(activationUrl, password) {
+  try {
+    const data = await client.request(CUSTOMER_ACTIVATE_BY_URL_MUTATION, {
+      activationUrl,
+      password,
+    });
+    return data.customerActivateByUrl;
+  } catch (error) {
+    console.error("Shopify customerActivateByUrl failed:", error);
+    return {
+      customer: null,
+      customerAccessToken: null,
+      customerUserErrors: [{ message: 'Service unavailable. Please try again later.' }]
+    };
+  }
+}
