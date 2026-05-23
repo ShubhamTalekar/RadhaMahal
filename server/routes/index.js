@@ -1,6 +1,5 @@
 import contactRoutes from './contact.js';
 import consultationRoutes from './consultation.js';
-import authRoutes from './auth.js';
 import wishlistRoutes from './wishlist.js';
 import bagRoutes from './bag.js';
 import webhooksRoutes from './webhooks.js';
@@ -13,7 +12,6 @@ import adminRoutes from './admin.js';
 export function registerRoutes(app) {
     app.use('/', contactRoutes);
     app.use('/', consultationRoutes);
-    app.use('/', authRoutes);
     app.use('/', wishlistRoutes);
     app.use('/', bagRoutes);
     app.use('/', webhooksRoutes);

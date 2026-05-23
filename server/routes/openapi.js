@@ -55,38 +55,6 @@
 
 /**
  * @openapi
- * /api/gauth/sync:
- *   post:
- *     summary: Sync a Google OAuth user to Shopify Customers
- *     description: |
- *       Called immediately after Google login. Creates or retrieves a matching
- *       Shopify customer by email, then returns a session token. This bridges
- *       Google Identity with Shopify's customer model without a separate user DB.
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [email]
- *             properties:
- *               email: { type: string, format: email }
- *               name:  { type: string }
- *     responses:
- *       200:
- *         description: User synced, returns Shopify customer id
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:    { type: boolean }
- *                 customerId: { type: string }
- */
-
-/**
- * @openapi
  * /api/wishlist/sync:
  *   post:
  *     summary: Persist a customer's wishlist to Shopify customer metafields

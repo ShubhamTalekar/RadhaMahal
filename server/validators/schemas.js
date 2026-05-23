@@ -2,8 +2,7 @@ import { z } from 'zod';
 
 // ─── Reusable field schemas ──────────────────────────────────────────────────
 const email = z.string().email('Invalid email address').max(254);
-const name  = z.string().min(1, 'Name is required').max(200);
-const phone = z.string().min(5, 'Phone number too short').max(20).optional();
+const name = z.string().min(1, 'Name is required').max(200);
 
 // ─── Per-endpoint schemas ────────────────────────────────────────────────────
 
@@ -24,34 +23,31 @@ export const consultationSchema = z.object({
     time: z.string().min(1, 'Time is required').max(20),
 });
 
-/** POST /api/gauth/sync */
-export const gauthSyncSchema = z.object({
-    email,
-    name: z.string().optional(),
-    action: z.enum(['login', 'register']).optional(),
-});
-
 /** POST /api/wishlist/sync and POST /api/bag/sync */
 export const syncItemsSchema = z.object({
     email,
-    items: z.array(z.object({
-        id: z.union([z.string(), z.number()]).transform(String),
-        title: z.string().optional(),
-    })).default([]),
+    items: z
+        .array(
+            z.object({
+                id: z.union([z.string(), z.number()]).transform(String),
+                title: z.string().optional(),
+            })
+        )
+        .default([]),
 });
 
 /** POST /api/restock-notification */
 export const restockSchema = z.object({
     email,
-    productId:   z.string().min(1, 'Product ID is required'),
-    variantId:   z.string().optional(),
+    productId: z.string().min(1, 'Product ID is required'),
+    variantId: z.string().optional(),
     productName: z.string().min(1, 'Product name is required').max(500),
 });
 
 /** POST /api/reviews/:productId */
 export const reviewSchema = z.object({
-    author:  z.string().min(1).max(100),
-    rating:  z.number().int().min(1).max(5),
+    author: z.string().min(1).max(100),
+    rating: z.number().int().min(1).max(5),
     comment: z.string().min(1).max(1000),
 });
 
