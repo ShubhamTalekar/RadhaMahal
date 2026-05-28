@@ -19,9 +19,12 @@ if (process.env.NODE_ENV === 'production') {
 export const PORT                 = process.env.PORT || 5001;
 export const NODE_ENV             = process.env.NODE_ENV || 'development';
 
-export const CORS_ORIGINS = process.env.NODE_ENV === 'production'
-    ? (process.env.CORS_ORIGINS || 'https://radhamahal.com,https://radhamahal.onrender.com,https://www.radhamahalbyneha.in,https://radhamahalbyneha.in').split(',').map(o => o.trim())
+const rawCorsOrigins = process.env.NODE_ENV === 'production'
+    ? (process.env.CORS_ORIGINS || 'https://radhamahal.com,https://radhamahal.onrender.com').split(',').map(o => o.trim())
     : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+
+// Always append the known live domains to prevent lockouts if the env var was overridden manually
+export const CORS_ORIGINS = [...new Set([...rawCorsOrigins, 'https://www.radhamahalbyneha.in', 'https://radhamahalbyneha.in', 'https://radhamahal.onrender.com'])];
 
 export const SHOPIFY_DOMAIN       = process.env.VITE_SHOPIFY_DOMAIN || 'radha-mahal-2.myshopify.com';
 export const SHOPIFY_ADMIN_TOKEN  = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
