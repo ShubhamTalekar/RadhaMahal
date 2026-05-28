@@ -75,10 +75,11 @@ export const adminLogin = asyncHandler(async (req, res) => {
     // Set HttpOnly cookie — not accessible to JavaScript, preventing XSS token theft.
     // SameSite=Lax allows the cookie to be sent on top-level navigations.
     // Secure=true ensures it's only sent over HTTPS (NODE_ENV=production).
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('admin_token', token, {
         httpOnly: true,
-        secure:   process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure:   isProd,
+        sameSite: isProd ? 'none' : 'lax',
         maxAge:   12 * 60 * 60 * 1000, // 12 hours, matches JWT expiry
         path:     '/',
     });
@@ -88,7 +89,8 @@ export const adminLogin = asyncHandler(async (req, res) => {
 
 /** Clear the admin cookie (logout) */
 export const adminLogout = asyncHandler(async (_req, res) => {
-    res.clearCookie('admin_token', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' });
+    const isProd = process.env.NODE_ENV === 'production';
+    res.clearCookie('admin_token', { httpOnly: true, secure: isProd, sameSite: isProd ? 'none' : 'lax', path: '/' });
     res.json({ success: true });
 });
 
