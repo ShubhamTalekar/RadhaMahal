@@ -73,13 +73,12 @@ export const adminLogin = asyncHandler(async (req, res) => {
     const token = jwt.sign({ email, role: 'admin', source: authSource }, JWT_SECRET, { expiresIn: '12h' });
 
     // Set HttpOnly cookie — not accessible to JavaScript, preventing XSS token theft.
-    // SameSite=Lax allows the cookie to be sent on top-level navigations.
-    // Secure=true ensures it's only sent over HTTPS (NODE_ENV=production).
-    const isProd = process.env.NODE_ENV === 'production';
+    // We use SameSite=None and Secure=true for remote cross-domain environments.
+    const isRemote = req.hostname !== 'localhost' && req.hostname !== '127.0.0.1';
     res.cookie('admin_token', token, {
         httpOnly: true,
-        secure:   isProd,
-        sameSite: isProd ? 'none' : 'lax',
+        secure:   isRemote,
+        sameSite: isRemote ? 'none' : 'lax',
         maxAge:   12 * 60 * 60 * 1000, // 12 hours, matches JWT expiry
         path:     '/',
     });
@@ -88,9 +87,9 @@ export const adminLogin = asyncHandler(async (req, res) => {
 });
 
 /** Clear the admin cookie (logout) */
-export const adminLogout = asyncHandler(async (_req, res) => {
-    const isProd = process.env.NODE_ENV === 'production';
-    res.clearCookie('admin_token', { httpOnly: true, secure: isProd, sameSite: isProd ? 'none' : 'lax', path: '/' });
+export const adminLogout = asyncHandler(async (req, res) => {
+    const isRemote = req.hostname !== 'localhost' && req.hostname !== '127.0.0.1';
+    res.clearCookie('admin_token', { httpOnly: true, secure: isRemote, sameSite: isRemote ? 'none' : 'lax', path: '/' });
     res.json({ success: true });
 });
 
