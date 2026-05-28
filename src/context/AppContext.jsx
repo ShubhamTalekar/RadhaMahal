@@ -130,6 +130,7 @@ export function AppProvider({ children }) {
           if (baseColors.some(c => lower.includes(c))) return false;
           if (lower === 'carousel' || lower === 'hero') return false;
           if (lower.includes('silk') || lower.includes('saree') || lower.includes('zari')) return false;
+          if (lower.includes('home page') || lower.includes('automated') || lower.includes('frontpage')) return false;
           return true;
         }).sort();
         setOccasions(validOccasions);
