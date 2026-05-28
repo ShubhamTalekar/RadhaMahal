@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { CONTACT_EMAIL } from '../constants';
-
-
+import SEO from '../components/SEO';
 const faqs = [
     {
         category: "Shipping & Returns",
@@ -58,6 +57,10 @@ export default function FAQ() {
 
     return (
         <main className="min-h-screen bg-surface py-24 px-8">
+            <SEO 
+                title="FAQ - Radha Mahal"
+                description="Frequently asked questions about Radha Mahal products, shipping, returns, and bespoke services."
+            />
             <div className="max-w-3xl mx-auto">
                 <div className="text-center mb-16">
                     <span className="text-secondary tracking-[0.3em] uppercase text-xs font-bold block mb-4">We're here to help</span>

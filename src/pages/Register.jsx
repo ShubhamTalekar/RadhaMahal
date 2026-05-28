@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { registerCustomer } from '../shopifyClient';
+import SEO from '../components/SEO';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -49,6 +50,10 @@ export default function Register() {
 
     return (
         <div className="min-h-screen flex font-body bg-[#fdfbf7] flex-row-reverse">
+            <SEO 
+                title="Register - Radha Mahal"
+                description="Create your exclusive Radha Mahal profile to track bespoke orders and build your wishlist."
+            />
             <div className="hidden lg:block lg:w-1/2 relative bg-[#4b284d]">
                 <img
                     src="/register-campaign.png"

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { loginCustomer } from '../shopifyClient';
+import SEO from '../components/SEO';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -48,6 +49,10 @@ export default function Login() {
 
     return (
         <div className="min-h-screen flex font-body bg-[#fdfbf7]">
+            <SEO 
+                title="Login - Radha Mahal"
+                description="Sign in to your private atelier at Radha Mahal."
+            />
             <div className="hidden lg:block lg:w-1/2 relative bg-primary">
                 <img src="/login-campaign.png" alt="Campaign" className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-primary/20 mix-blend-multiply"></div>

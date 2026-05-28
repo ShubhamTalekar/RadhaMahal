@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { createShopifyCart } from '../shopifyClient';
+import SEO from '../components/SEO';
 
 export default function ShoppingBag() {
     const { bag, setBag, user } = useApp();
@@ -63,6 +64,10 @@ export default function ShoppingBag() {
     const total = subtotal + taxes;
     return (
         <main className="pt-12 pb-24 px-6 md:px-12 max-w-7xl mx-auto min-h-screen">
+            <SEO 
+                title="Your Bag - Radha Mahal"
+                description="Review your curated selections of heritage artistry at Radha Mahal."
+            />
             {/* Editorial Header */}
             <header className="mb-16">
                 <h1 className="font-headline text-5xl md:text-7xl text-secondary mb-4 italic">The Shopping Bag</h1>

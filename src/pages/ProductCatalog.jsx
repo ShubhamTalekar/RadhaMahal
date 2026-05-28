@@ -38,13 +38,49 @@ export default function ProductCatalog() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+    const [soldOutTimestamps, setSoldOutTimestamps] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('soldOutTimestamps') || '{}');
+        } catch {
+            return {};
+        }
+    });
 
     useEffect(() => {
         let mounted = true;
         getProducts()
             .then(fetchedProducts => {
                 if (mounted) {
-                    setProducts(fetchedProducts || []);
+                    const prods = fetchedProducts || [];
+                    setProducts(prods);
+
+                    // Track when each product first went sold out
+                    setSoldOutTimestamps(prev => {
+                        const now = Date.now();
+                        const updated = { ...prev };
+                        let changed = false;
+
+                        prods.forEach(p => {
+                            if (!p.availableForSale) {
+                                // First time we see it as sold out — record the timestamp
+                                if (!updated[p.id]) {
+                                    updated[p.id] = now;
+                                    changed = true;
+                                }
+                            } else {
+                                // Back in stock — remove the timestamp
+                                if (updated[p.id]) {
+                                    delete updated[p.id];
+                                    changed = true;
+                                }
+                            }
+                        });
+
+                        if (changed) {
+                            localStorage.setItem('soldOutTimestamps', JSON.stringify(updated));
+                        }
+                        return changed ? updated : prev;
+                    });
                 }
             })
             .catch(() => {
@@ -99,6 +135,17 @@ export default function ProductCatalog() {
 
     const currentPriceRange = priceRange !== null ? priceRange : maxPrice;
 
+    // A product is considered "stale sold out" (push to end) if it has been
+    // continuously out of stock for more than 24 hours.
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+    const isStaleSoldOut = (product) => {
+        if (product.availableForSale) return false;
+        const ts = soldOutTimestamps[product.id];
+        if (!ts) return false; // Timestamp not yet recorded (e.g., first page load)
+        return Date.now() - ts >= ONE_DAY_MS;
+    };
+
     const filteredProducts = useMemo(() => {
         if (!products.length) return [];
         return products.filter(p => {
@@ -121,12 +168,20 @@ export default function ProductCatalog() {
             if (p.final_price > currentPriceRange) return false;
             return true;
         }).sort((a, b) => {
+            // Always push stale sold-out products to the end, regardless of sort order
+            const aStale = isStaleSoldOut(a);
+            const bStale = isStaleSoldOut(b);
+            if (aStale && !bStale) return 1;
+            if (!aStale && bStale) return -1;
+
+            // Normal sort for the rest
             if (sortOption === 'Price: Low to High') return a.final_price - b.final_price;
             if (sortOption === 'Price: High to Low') return b.final_price - a.final_price;
             if (sortOption === 'New Arrivals') return Number(b.id) - Number(a.id);
             return 0;
         });
-    }, [products, selectedCategory, selectedColors, selectedOccasions, currentPriceRange, sortOption, searchQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [products, selectedCategory, selectedColors, selectedOccasions, currentPriceRange, sortOption, searchQuery, soldOutTimestamps]);
 
     const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
     const currentProducts = filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);

@@ -8,6 +8,7 @@
   "dependencies": {
     "@sentry/node": "^10.53.1",
     "@supabase/supabase-js": "^2.105.4",
+    "bcryptjs": "^3.0.3",
     "connect-timeout": "^1.9.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

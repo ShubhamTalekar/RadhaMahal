@@ -1,17 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+import { supabase } from '../services/supabase.js';
 
-dotenv.config();
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-let supabase = null;
-
-if (supabaseUrl && supabaseKey) {
-    supabase = createClient(supabaseUrl, supabaseKey);
-    console.log('[Store] Supabase configured for persistent storage.');
+// No need to initialize supabase client here, it's shared from services/supabase.js
+if (supabase) {
+    console.log('[Store] Supabase client linked from shared service.');
 } else {
-    console.warn('[Store] ⚠️ Supabase not configured. Falling back to ephemeral memory (data will be lost on restart in cluster mode).');
+    console.warn('[Store] ⚠️ Supabase not configured. Falling back to ephemeral memory.');
 }
 
 // Fallback in-memory state

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/apiClient';
 import { toast } from 'sonner';
+import SEO from '../components/SEO';
 
 export default function VideoConsultation() {
     const { user } = useApp();
@@ -54,6 +55,10 @@ export default function VideoConsultation() {
 
     return (
         <main className="min-h-screen bg-surface">
+            <SEO 
+                title="Video Consultation - Radha Mahal"
+                description="Book a personalized virtual styling session with our experts."
+            />
             {/* Hero Section */}
             <section className="relative h-[60vh] min-h-[400px] flex items-center justify-center overflow-hidden">
                 {/* Fallback pattern in case image takes time to load */}

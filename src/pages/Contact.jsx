@@ -3,6 +3,7 @@ import { Mail, Phone, Send } from 'lucide-react';
 import { CONTACT_EMAIL } from '../constants';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/apiClient';
+import SEO from '../components/SEO';
 
 export default function Contact() {
     const { user } = useApp();
@@ -44,6 +45,10 @@ export default function Contact() {
 
     return (
         <main className="bg-[#fdfbf7] text-primary min-h-screen pt-24 pb-32 font-body">
+            <SEO 
+                title="Contact Us - Radha Mahal"
+                description="Connect with our concierge for bespoke bridal wear, festive ensembles, or cluster inquiries. We are here to assist your journey."
+            />
             {/* Header section */}
             <section className="max-w-7xl mx-auto px-6 mb-24">
                 <div className="flex items-center gap-4 mb-6">

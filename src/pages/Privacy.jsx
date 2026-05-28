@@ -1,8 +1,13 @@
 import React from 'react';
+import SEO from '../components/SEO';
 
 export default function Privacy() {
     return (
         <main className="min-h-screen bg-surface py-24 px-8">
+            <SEO 
+                title="Privacy Policy - Radha Mahal"
+                description="Read the privacy policy for Radha Mahal."
+            />
             <div className="max-w-3xl mx-auto">
                 <div className="mb-16">
                     <span className="text-secondary tracking-[0.3em] uppercase text-xs font-bold block mb-4">Legal</span>

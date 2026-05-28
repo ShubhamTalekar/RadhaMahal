@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
 import { createShopifyCart } from '../shopifyClient';
+import SEO from '../components/SEO';
 
 export default function Checkout() {
     const navigate = useNavigate();
@@ -77,6 +78,10 @@ export default function Checkout() {
 
     return (
         <main className="pt-12 pb-24 px-6 md:px-12 max-w-7xl mx-auto min-h-screen">
+            <SEO 
+                title="Checkout - Radha Mahal"
+                description="Complete your order and secure your bespoke pieces."
+            />
             {toast && (
               <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }}
                 className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 w-60 sm:w-72 text-[10px] sm:text-xs">

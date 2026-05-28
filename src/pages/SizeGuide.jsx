@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 
 export default function SizeGuide() {
     const sizeData = {
@@ -30,6 +31,10 @@ export default function SizeGuide() {
 
     return (
         <div className="bg-[#fdfbf7] min-h-screen py-16">
+            <SEO 
+                title="Size Guide - Radha Mahal"
+                description="Find your perfect fit with our detailed size charts."
+            />
             <div className="container mx-auto px-4 max-w-4xl">
                 <header className="text-center mb-16">
                     <h1 className="text-5xl md:text-6xl text-primary mb-4 font-display">

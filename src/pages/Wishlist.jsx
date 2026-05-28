@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
+import SEO from '../components/SEO';
 
 export default function Wishlist() {
     const { wishlist, setWishlist, bag, setBag } = useApp();
@@ -24,6 +25,10 @@ export default function Wishlist() {
     };
     return (
         <div className="min-h-screen pb-24 md:pb-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(233, 195, 73, 0.05) 1px, transparent 0)', backgroundSize: '40px 40px' }}>
+            <SEO 
+                title="Wishlist - Radha Mahal"
+                description="Your curated collection of coveted heritage pieces."
+            />
             {toast && (
               <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }}
                 className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 w-60 sm:w-72 text-[10px] sm:text-xs">

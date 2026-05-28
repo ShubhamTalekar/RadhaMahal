@@ -7,6 +7,8 @@ import sharp from 'sharp';
 import { getBannerConfig as fetchBannerConfig, setBannerConfig as saveBannerConfig } from '../utils/store.js';
 import { paginateCustomers, fetchOrdersByEmail } from '../services/shopify.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import bcrypt from 'bcryptjs';
+import { supabase } from '../services/supabase.js';
 import { SHOPIFY_ADMIN_TOKEN, ADMIN_PASSWORD, JWT_SECRET, EMADMIN_EMAIL } from '../config/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -17,20 +19,58 @@ export const adminLogin = asyncHandler(async (req, res) => {
     
     console.log('--- ADMIN LOGIN ATTEMPT ---');
     console.log('Received email:', email);
-    console.log('Received password:', password);
-    console.log('Expected email:', 'admin@radhamahal.com');
-    console.log('Expected password:', ADMIN_PASSWORD);
     console.log('---------------------------');
 
-    const allowedEmails = ['admin@radhamahal.com'];
-    if (EMADMIN_EMAIL) allowedEmails.push(EMADMIN_EMAIL);
+    let isAuthenticated = false;
+    let authSource = 'none';
 
-    // Simplistic auth since there's only one admin user
-    if (!allowedEmails.includes(email) || password !== ADMIN_PASSWORD) {
+    // 1. Try DB Auth via Supabase
+    if (supabase) {
+        try {
+            const { data: dbUser, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('email', email)
+                .single();
+
+            if (error) {
+                console.warn('[Admin Login] DB query warning:', error.message);
+            } else if (dbUser && dbUser.password_hash) {
+                const isMatch = await bcrypt.compare(password, dbUser.password_hash);
+                if (isMatch && dbUser.role === 'admin') {
+                    isAuthenticated = true;
+                    authSource = 'database';
+                    console.log('[Admin Login] Successfully authenticated via Database!');
+                } else if (!isMatch) {
+                    console.warn('[Admin Login] Password mismatch in database.');
+                } else if (dbUser.role !== 'admin') {
+                    console.warn('[Admin Login] User is not an admin in database.');
+                }
+            } else {
+                console.warn('[Admin Login] User not found in database or has no password hash.');
+            }
+        } catch (err) {
+            console.error('[Admin Login] Database auth unexpected error:', err);
+        }
+    }
+
+    // 2. Fallback to Env-based Auth (useful for local fallback or when DB is not configured)
+    if (!isAuthenticated) {
+        const allowedEmails = ['admin@radhamahal.com'];
+        if (EMADMIN_EMAIL) allowedEmails.push(EMADMIN_EMAIL);
+
+        if (allowedEmails.includes(email) && password === ADMIN_PASSWORD) {
+            isAuthenticated = true;
+            authSource = 'environment';
+            console.log('[Admin Login] Successfully authenticated via Environment variables fallback!');
+        }
+    }
+
+    if (!isAuthenticated) {
         return res.status(401).json({ success: false, message: 'Invalid admin credentials' });
     }
 
-    const token = jwt.sign({ email, role: 'admin' }, JWT_SECRET, { expiresIn: '12h' });
+    const token = jwt.sign({ email, role: 'admin', source: authSource }, JWT_SECRET, { expiresIn: '12h' });
 
     // Set HttpOnly cookie — not accessible to JavaScript, preventing XSS token theft.
     // SameSite=Lax allows the cookie to be sent on top-level navigations.

@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../supabaseClient';
 import { toast } from 'sonner';
-import { User, Mail, Phone, MapPin, Package, Clock, MessageSquare, Edit3, LogOut, CheckCircle, Trash2, PlusCircle, X, Star, Camera } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Package, Clock, MessageSquare, Edit3, LogOut, CheckCircle, Trash2, PlusCircle, X, Star, Camera, Check } from 'lucide-react';
+import SEO from '../components/SEO';
 
 export default function Profile() {
     const { user, setUser } = useApp();
@@ -99,6 +100,98 @@ export default function Profile() {
 
     const latestOrder = allOrders[0];
 
+    const [trackedOrderId, setTrackedOrderId] = useState(latestOrder?.id || null);
+    const [trackingDetails, setTrackingDetails] = useState(null);
+    const [loadingTracking, setLoadingTracking] = useState(false);
+
+    useEffect(() => {
+        if (latestOrder && !trackedOrderId) {
+            setTrackedOrderId(latestOrder.id);
+        }
+    }, [latestOrder, trackedOrderId]);
+
+    useEffect(() => {
+        if (!trackedOrderId) {
+            setTrackingDetails(null);
+            return;
+        }
+        let isMounted = true;
+        setLoadingTracking(true);
+        fetch(`/api/v1/track/${trackedOrderId}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Order details not found');
+                return res.json();
+            })
+            .then(data => {
+                if (isMounted) {
+                    setTrackingDetails(data);
+                    setLoadingTracking(false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (isMounted) {
+                    setTrackingDetails(null);
+                    setLoadingTracking(false);
+                }
+            });
+        return () => {
+            isMounted = false;
+        };
+    }, [trackedOrderId]);
+
+    const trackedOrder = allOrders.find(o => o.id === trackedOrderId) || latestOrder;
+
+    const getFallbackStages = (order) => {
+        if (!order) return [];
+        const isFulfilled = order.status === 'fulfilled';
+        const isPartial = order.status === 'partial';
+        
+        return [
+            {
+                key: 'handcrafted',
+                title: 'Handcrafted & Packaged',
+                description: isFulfilled 
+                    ? 'Your creation has been handwoven, carefully detailed, and packaged in our custom atelier box.'
+                    : 'We are preparing your masterpiece at our atelier.',
+                date: order.date,
+                status: 'completed'
+            },
+            {
+                key: 'dispatched',
+                title: 'Dispatched',
+                description: isFulfilled 
+                    ? 'Handed over to our courier partner.' 
+                    : 'Awaiting package handoff to courier.',
+                date: isFulfilled ? order.date : null,
+                status: isFulfilled ? 'completed' : isPartial ? 'active' : 'pending'
+            },
+            {
+                key: 'in_transit',
+                title: 'In Transit',
+                description: isFulfilled 
+                    ? 'Transit completed.' 
+                    : 'Package moving through carrier network.',
+                date: null,
+                status: isFulfilled ? 'completed' : 'pending'
+            },
+            {
+                key: 'out_for_delivery',
+                title: 'Out for Delivery',
+                description: 'Courier delivering package today.',
+                date: null,
+                status: isFulfilled ? 'completed' : 'pending'
+            },
+            {
+                key: 'delivered',
+                title: 'Delivered',
+                description: 'Successfully received. Enjoy your heirloom creation!',
+                date: isFulfilled ? order.date : null,
+                status: isFulfilled ? 'completed' : 'pending'
+            }
+        ];
+    };
+
     const handleAddAddress = () => {
         if (!newAddress.title || !newAddress.lines) {
             setIsAddingAddress(false);
@@ -159,6 +252,10 @@ export default function Profile() {
 
     return (
         <main className="pt-24 pb-32 px-6 max-w-7xl mx-auto min-h-screen bg-[#fdfbf7] font-body">
+            <SEO 
+                title="Your Profile - Radha Mahal"
+                description="View your sartorial history, bespoke journey, and saved destinations at Radha Mahal."
+            />
             {/* Header Section */}
             <header className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-8">
                 <div>
@@ -287,53 +384,108 @@ export default function Profile() {
                 <section className="md:col-span-8 bg-primary p-10 rounded-[2.5rem] relative overflow-hidden shadow-2xl">
                     <div className="absolute -right-20 -top-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
                     <div className="relative z-10">
-                        <h2 className="text-3xl text-[#d4af37] mb-10" >My Loom Heritage</h2>
-                        {latestOrder ? (
+                        <h2 className="text-3xl text-[#d4af37] mb-10 flex items-center justify-between" >
+                            <span>My Loom Heritage</span>
+                            {loadingTracking && (
+                                <span className="text-xs text-white/40 normal-case font-body flex items-center gap-2">
+                                    <span className="animate-spin h-3 w-3 border border-t-transparent border-[#d4af37] rounded-full"></span>
+                                    Syncing...
+                                </span>
+                            )}
+                        </h2>
+                        {trackedOrder ? (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 font-display">
-                                <div className="space-y-6">
+                                <div className="space-y-8">
                                     <div className="flex items-center gap-6">
                                         <div className="h-20 w-20 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20">
                                             <Package className="w-10 h-10 text-[#d4af37]" />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl text-[#fdfbf7]" >{latestOrder.items[0]?.title || 'Bespoke Creation'}</h3>
-                                            <p className="text-white/50 text-sm font-headline">Order #{latestOrder.id} • {latestOrder.date}</p>
+                                            <h3 className="text-xl text-[#fdfbf7]" >{trackedOrder.items[0]?.title || 'Bespoke Creation'}</h3>
+                                            <p className="text-white/50 text-sm font-headline">Order #{trackedOrder.id} • {trackedOrder.date}</p>
                                         </div>
                                     </div>
-                                    <div className="pt-6">
-                                        <div className="flex justify-between text-xs mb-3">
-                                            <span className="text-[#d4af37] uppercase tracking-widest font-bold">
-                                                {latestOrder.status === 'fulfilled' ? 'In Your Hands' : latestOrder.status === 'partial' ? 'Partially Dispatched' : 'Artisans at Work'}
-                                            </span>
-                                            <span className="text-white/60">Stage: {latestOrder.status || 'Weaving'}</span>
-                                        </div>
-                                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                            <div 
-                                                className="h-full bg-gradient-to-r from-[#d4af37] to-[#f4d56f] rounded-full shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all duration-1000"
-                                                style={{ width: latestOrder.status === 'fulfilled' ? '100%' : latestOrder.status === 'partial' ? '70%' : '30%' }}
-                                            ></div>
-                                        </div>
+                                    
+                                    {/* Timeline stages */}
+                                    <div className="relative pl-2 py-2">
+                                        {(trackingDetails?.stages || getFallbackStages(trackedOrder)).map((stage, idx, arr) => {
+                                            const isCompleted = stage.status === 'completed';
+                                            const isActive = stage.status === 'active';
+                                            const isPending = stage.status === 'pending';
+                                            const isCancelled = stage.status === 'cancelled';
+
+                                            return (
+                                                <div key={stage.key} className="relative pl-8 pb-6 last:pb-0">
+                                                    {/* Connecting Line */}
+                                                    {idx < arr.length - 1 && (
+                                                        <div className={`absolute left-3 top-6 bottom-0 w-[2px] transition-colors duration-500
+                                                            ${isCompleted && (arr[idx+1].status === 'completed' || arr[idx+1].status === 'active')
+                                                                ? 'bg-[#d4af37]' 
+                                                                : 'bg-white/10'
+                                                            }`} 
+                                                        />
+                                                    )}
+
+                                                    {/* Timeline node */}
+                                                    <div className={`absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-500 z-10
+                                                        ${isCompleted 
+                                                            ? 'bg-[#d4af37] border-[#d4af37] text-primary shadow-[0_0_10px_rgba(212,175,55,0.4)]' 
+                                                            : isActive 
+                                                            ? 'bg-[#1a0b2e] border-[#d4af37] text-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,0.6)] animate-pulse' 
+                                                            : isCancelled 
+                                                            ? 'bg-red-950 border-red-500 text-red-500'
+                                                            : 'bg-[#1a0b2e] border-white/20 text-white/30'
+                                                        }`}
+                                                    >
+                                                        {isCompleted ? (
+                                                            <Check className="w-3.5 h-3.5 text-primary" />
+                                                        ) : (
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-[#d4af37]' : 'bg-current'}`} />
+                                                        )}
+                                                    </div>
+
+                                                    {/* Content */}
+                                                    <div className={`transition-all duration-300 ${isPending ? 'opacity-40' : 'opacity-100'}`}>
+                                                        <div className="flex flex-wrap items-baseline gap-x-3 mb-1">
+                                                            <span className={`font-display text-sm font-bold tracking-wider uppercase ${isActive ? 'text-[#d4af37]' : 'text-[#fdfbf7]'}`}>
+                                                                {stage.title}
+                                                            </span>
+                                                            {stage.date && (
+                                                                <span className="text-[10px] font-headline text-white/40 tracking-wider">
+                                                                    {stage.date}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-white/60 font-body leading-relaxed max-w-md font-sans">
+                                                            {stage.description}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-                                <div className="p-8 bg-white/10 rounded-3xl border border-white/10 backdrop-blur-sm">
+                                <div className="p-8 bg-white/10 rounded-3xl border border-white/10 backdrop-blur-sm self-start">
                                     <h4 className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mb-4 flex items-center gap-2">
                                         <Clock className="w-3 h-3" />
                                         Atelier Update
                                     </h4>
                                     <p className="text-white/80 italic leading-relaxed text-sm mb-6" >
-                                        {latestOrder.tracking ? 
-                                            `Your masterpiece has been handed to our logistics partners (${latestOrder.tracking.company}). Follow its journey below.` :
+                                        {trackingDetails?.tracking ? 
+                                            `Your masterpiece has been handed to our logistics partners (${trackingDetails.tracking.company}). Follow its journey below.` :
+                                            trackedOrder.tracking ?
+                                            `Your masterpiece has been handed to our logistics partners (${trackedOrder.tracking.company}). Follow its journey below.` :
                                             `"Our master artisans are currently performing the intricate 'Zari' work on your garment. Each thread is being treated with the utmost care."`}
                                     </p>
-                                    {latestOrder.tracking ? (
+                                    {(trackingDetails?.tracking || trackedOrder.tracking) ? (
                                         <a 
-                                            href={latestOrder.tracking.url} 
+                                            href={trackingDetails?.tracking?.url || trackedOrder.tracking?.url} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 text-[#d4af37] hover:text-[#f4d56f] transition-colors text-xs font-bold uppercase tracking-widest group font-display"
                                         >
                                             <Package className="w-4 h-4" />
-                                            Live Tracking #{latestOrder.tracking.number}
+                                            Live Tracking #{trackingDetails?.tracking?.number || trackedOrder.tracking?.number}
                                             <div className="w-0 h-[1px] bg-[#d4af37] group-hover:w-full transition-all duration-300"></div>
                                         </a>
                                     ) : (
@@ -343,6 +495,24 @@ export default function Profile() {
                                             <div className="w-0 h-[1px] bg-[#d4af37] group-hover:w-full transition-all duration-300"></div>
                                         </button>
                                     )}
+
+                                    {/* Items list inside this tracker */}
+                                    <div className="mt-8 pt-6 border-t border-white/10">
+                                        <h4 className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mb-4">Garments in Order</h4>
+                                        <div className="space-y-4">
+                                            {trackedOrder.items.map((item, idx) => (
+                                                <div key={idx} className="flex items-center gap-3">
+                                                    {item.image && (
+                                                        <img src={item.image} alt={item.title} className="w-10 h-12 object-cover rounded-lg border border-white/10" />
+                                                    )}
+                                                    <div>
+                                                        <p className="text-xs text-white font-medium line-clamp-1">{item.title}</p>
+                                                        <p className="text-[10px] text-white/40 font-display">Qty: {item.quantity}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -384,11 +554,14 @@ export default function Profile() {
                                             </Link>
                                         </div>
                                     </div>
-                                    <div className="text-right flex flex-col items-end">
+                                    <div className="text-right flex flex-col items-end gap-2">
                                         <p className="text-[#d4af37] font-bold text-lg">₹{order.total.toLocaleString('en-IN')}</p>
-                                        <div className="p-2 rounded-full bg-[#d4af37]/10 text-[#d4af37] mt-2">
-                                            <Package className="w-3 h-3" />
-                                        </div>
+                                        <button 
+                                            onClick={() => setTrackedOrderId(order.id)}
+                                            className={`px-3 py-1 text-[10px] uppercase tracking-widest rounded-full transition-all duration-300 font-bold ${trackedOrderId === order.id ? 'bg-[#d4af37] text-white shadow-[0_0_10px_rgba(212,175,55,0.3)]' : 'bg-[#d4af37]/10 text-[#d4af37] hover:bg-[#d4af37] hover:text-white'}`}
+                                        >
+                                            {trackedOrderId === order.id ? 'Tracking' : 'Track'}
+                                        </button>
                                     </div>
                                 </div>
                             ))
