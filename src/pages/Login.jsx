@@ -34,13 +34,14 @@ export default function Login() {
             }
 
             setUser({
-                name: localProfile.name || `${customer.firstName} ${customer.lastName}`,
+                name: localProfile.name || customer.name || '',
                 email: customer.email,
                 phone: localProfile.phone || customer.phone || '',
                 shopifyId: customer.id,
+                shopifyToken: customer.shopifyToken,
                 photoUrl: localProfile.photoUrl,
-                addresses: localProfile.addresses || [],
-                orders: customer.parsedOrders || localProfile.orders || [],
+                addresses: localProfile.addresses || customer.addresses || [],
+                orders: customer.orders || localProfile.orders || [],
             });
             navigate('/profile');
         }

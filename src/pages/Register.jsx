@@ -41,6 +41,7 @@ export default function Register() {
                 email: customer.email,
                 phone: customer.phone,
                 shopifyId: customer.id,
+                shopifyToken: customer.shopifyToken, // Save token to enable auto-syncing orders on page load
             });
 
             navigate('/profile');
