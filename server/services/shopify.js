@@ -88,7 +88,9 @@ export async function fetchOrdersByEmail(email) {
 
 /** Fetch a single order by order name/number */
 export async function fetchOrderByNumber(orderNumber) {
-    const url = `${shopifyApiBase()}/orders.json?name=${orderNumber}&status=any`;
+    // Shopify orders API name field uses #1001 format
+    const name = orderNumber.startsWith('#') ? orderNumber : `%23${orderNumber}`;
+    const url = `${shopifyApiBase()}/orders.json?name=${name}&status=any`;
     const res = await fetch(url, { headers: shopifyReadHeaders() });
     return res.json();
 }

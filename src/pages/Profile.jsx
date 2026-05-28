@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../supabaseClient';
+import { config } from '../lib/config';
 import { toast } from 'sonner';
 import { User, Mail, Phone, MapPin, Package, Clock, MessageSquare, Edit3, LogOut, CheckCircle, Trash2, PlusCircle, X, Star, Camera, Check } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -9,10 +10,6 @@ import SEO from '../components/SEO';
 export default function Profile() {
     const { user, setUser } = useApp();
     const navigate = useNavigate();
-    
-    useEffect(() => {
-        // Handled by AuthGuard in App.jsx
-    }, [user]);
 
     const [isEditing, setIsEditing] = useState(false);
     const [profileData, setProfileData] = useState({
@@ -20,9 +17,54 @@ export default function Profile() {
         email: user?.email || '',
         phone: user?.phone || ''
     });
-
     const [addresses, setAddresses] = useState(user?.addresses || []);
     const fileInputRef = useRef(null);
+
+    // ── Helper: persist profile to backend ──────────────────────────────────
+    const persistProfile = useCallback(async (payload) => {
+        try {
+            const res = await fetch(`${config.API_BASE_URL}/api/v1/customer/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) console.warn('[Profile] Save failed with status', res.status);
+        } catch (err) {
+            console.error('[Profile] Save error:', err);
+        }
+    }, []);
+
+    // ── On mount: fetch latest profile from Supabase ─────────────────────────
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch(`${config.API_BASE_URL}/api/v1/customer/profile`, {
+                    credentials: 'include',
+                });
+                if (!res.ok) return; // not logged in or session expired — silently skip
+                const data = await res.json();
+                if (data.success && data.profile) {
+                    const p = data.profile;
+                    setProfileData(prev => ({
+                        name:  p.name  || prev.name,
+                        email: prev.email,
+                        phone: p.phone || prev.phone,
+                    }));
+                    if (p.addresses?.length) setAddresses(p.addresses);
+                    if (p.photoUrl) setUser(prev => ({ ...prev, photoUrl: p.photoUrl }));
+                }
+            } catch (err) {
+                console.warn('[Profile] Could not fetch backend profile (non-fatal):', err);
+            }
+        };
+        fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        // Handled by AuthGuard in App.jsx
+    }, [user]);
 
     const handlePhotoUpload = async (e) => {
         const file = e.target.files?.[0];
@@ -59,7 +101,7 @@ export default function Profile() {
                     toast.loading("Uploading photo...", { id: "photo-upload" });
 
                     try {
-                        const { data, error } = await supabase.storage
+                        const { error } = await supabase.storage
                             .from('avatars')
                             .upload(filePath, blob, {
                                 contentType: 'image/webp',
@@ -73,6 +115,8 @@ export default function Profile() {
                             .getPublicUrl(filePath);
 
                         setUser({ ...user, photoUrl: publicUrl });
+                        // Persist photo URL to Supabase via backend
+                        await persistProfile({ photoUrl: publicUrl });
                         toast.success("Profile photo updated", { id: "photo-upload" });
                     } catch (error) {
                         console.error('Photo upload error:', error);
@@ -84,6 +128,7 @@ export default function Profile() {
         };
         reader.readAsDataURL(file);
     };
+
     const [isAddingAddress, setIsAddingAddress] = useState(false);
     const [editingAddressId, setEditingAddressId] = useState(null);
     const [newAddress, setNewAddress] = useState({ title: '', lines: '' });
@@ -117,7 +162,7 @@ export default function Profile() {
         }
         let isMounted = true;
         setLoadingTracking(true);
-        fetch(`/api/v1/track/${trackedOrderId}`)
+        fetch(`${config.API_BASE_URL}/api/v1/track/${trackedOrderId}`)
             .then(res => {
                 if (!res.ok) throw new Error('Order details not found');
                 return res.json();
@@ -192,7 +237,7 @@ export default function Profile() {
         ];
     };
 
-    const handleAddAddress = () => {
+    const handleAddAddress = async () => {
         if (!newAddress.title || !newAddress.lines) {
             setIsAddingAddress(false);
             return;
@@ -202,11 +247,10 @@ export default function Profile() {
             { id: Date.now(), title: newAddress.title, lines: newAddress.lines.split('\n'), isPrimary: addresses.length === 0 }
         ];
         setAddresses(updatedAddresses);
-        if (user) {
-            setUser({ ...user, addresses: updatedAddresses });
-        }
+        if (user) setUser({ ...user, addresses: updatedAddresses });
         setNewAddress({ title: '', lines: '' });
         setIsAddingAddress(false);
+        await persistProfile({ addresses: updatedAddresses });
     };
 
     const handleEditAddressClick = (addr, e) => {
@@ -216,33 +260,36 @@ export default function Profile() {
         setIsAddingAddress(false);
     };
 
-    const handleUpdateAddress = () => {
+    const handleUpdateAddress = async () => {
         if (!newAddress.title || !newAddress.lines) return setEditingAddressId(null);
         const updated = addresses.map(addr => addr.id === editingAddressId ? { ...addr, title: newAddress.title, lines: newAddress.lines.split('\n') } : addr);
         setAddresses(updated);
         if (user) setUser({ ...user, addresses: updated });
         setEditingAddressId(null);
         setNewAddress({ title: '', lines: '' });
+        await persistProfile({ addresses: updated });
     };
 
-    const handleDeleteAddress = (id, e) => {
+    const handleDeleteAddress = async (id, e) => {
         e.stopPropagation();
         const updated = addresses.filter(addr => addr.id !== id);
         setAddresses(updated);
         if (user) setUser({ ...user, addresses: updated });
+        await persistProfile({ addresses: updated });
     };
 
-    const handleSetPrimary = (id) => {
+    const handleSetPrimary = async (id) => {
         const updated = addresses.map(addr => ({ ...addr, isPrimary: addr.id === id }));
         setAddresses(updated);
         if (user) setUser({ ...user, addresses: updated });
+        await persistProfile({ addresses: updated });
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsEditing(false);
-        if (user) {
-            setUser({ ...user, ...profileData });
-        }
+        if (user) setUser({ ...user, ...profileData });
+        await persistProfile({ name: profileData.name, phone: profileData.phone });
+        toast.success('Profile saved!');
     };
 
     const handleSignOut = () => {

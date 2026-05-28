@@ -51,6 +51,9 @@ CREATE TABLE IF NOT EXISTS users (
                         CHECK (role IN ('admin', 'customer')),
     first_name          TEXT,
     last_name           TEXT,
+    phone               TEXT,                              -- customer phone number
+    addresses           JSONB   DEFAULT '[]'::jsonb,       -- saved delivery addresses
+    photo_url           TEXT,                              -- profile photo URL
     shopify_customer_id BIGINT,                            -- Shopify numeric customer ID
     shopify_data        JSONB   DEFAULT '{}'::jsonb,       -- cached Shopify metadata / tags
     created_at          TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

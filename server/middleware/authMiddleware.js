@@ -35,3 +35,26 @@ export function verifyAdmin(req, res, next) {
         return res.status(401).json({ success: false, message: 'Unauthorized - Invalid or expired token' });
     }
 }
+
+/**
+ * Validates that the request has a valid customer JWT (set via customerLogin).
+ * Attaches decoded payload to req.customer.
+ */
+export function verifyCustomer(req, res, next) {
+    const token = req.cookies?.customer_token;
+
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Unauthorized - Please log in.' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'customer') {
+            return res.status(403).json({ success: false, message: 'Forbidden.' });
+        }
+        req.customer = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ success: false, message: 'Unauthorized - Session expired. Please log in again.' });
+    }
+}

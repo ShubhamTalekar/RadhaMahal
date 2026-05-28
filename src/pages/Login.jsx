@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { loginCustomer } from '../shopifyClient';
+import { config } from '../lib/config';
 import SEO from '../components/SEO';
 
 export default function Login() {
@@ -25,23 +26,33 @@ export default function Login() {
         }
 
         if (customer) {
-            const savedProfileStr = localStorage.getItem(`radha_mahal_profile_${customer.email}`);
-            let localProfile = {};
+            // Establish a secure backend session and fetch any saved profile data from Supabase
+            let dbProfile = {};
             try {
-                if (savedProfileStr) localProfile = JSON.parse(savedProfileStr);
-            } catch {
-                /* ignore parse errors */
+                const res = await fetch(`${config.API_BASE_URL}/api/v1/customer/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        customerAccessToken: customer.shopifyToken,
+                        email: customer.email,
+                    }),
+                });
+                const data = await res.json();
+                if (data.success && data.profile) dbProfile = data.profile;
+            } catch (err) {
+                console.warn('[Login] Backend session creation failed (non-fatal):', err);
             }
 
             setUser({
-                name: localProfile.name || customer.name || '',
-                email: customer.email,
-                phone: localProfile.phone || customer.phone || '',
-                shopifyId: customer.id,
+                name:         dbProfile.name    || customer.name    || '',
+                email:        customer.email,
+                phone:        dbProfile.phone   || customer.phone   || '',
+                shopifyId:    customer.id,
                 shopifyToken: customer.shopifyToken,
-                photoUrl: localProfile.photoUrl,
-                addresses: localProfile.addresses || customer.addresses || [],
-                orders: customer.orders || localProfile.orders || [],
+                photoUrl:     dbProfile.photoUrl || null,
+                addresses:    dbProfile.addresses?.length ? dbProfile.addresses : (customer.addresses || []),
+                orders:       customer.orders || [],
             });
             navigate('/profile');
         }

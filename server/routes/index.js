@@ -7,6 +7,7 @@ import ordersRoutes from './orders.js';
 import notificationsRoutes from './notifications.js';
 import reviewsRoutes from './reviews.js';
 import adminRoutes from './admin.js';
+import customerRoutes from './customers.js';
 // openapi.js is a JSDoc-only file scanned by swagger-jsdoc via config/swagger.js
 
 export function registerRoutes(app) {
@@ -19,4 +20,5 @@ export function registerRoutes(app) {
     app.use('/', notificationsRoutes);
     app.use('/', reviewsRoutes);
     app.use('/', adminRoutes);
+    app.use('/', customerRoutes);
 }
