@@ -34,13 +34,15 @@ export function clearAdminSession() {
     sessionStorage.removeItem(ADMIN_FLAG_KEY);
 }
 
+import { config } from './config';
+
 /**
  * Perform admin logout — clears the server-side HttpOnly cookie
  * and the client-side session flag.
  */
 export async function adminLogout() {
     try {
-        const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+        const BASE = config.API_BASE_URL;
         await fetch(`${BASE}/api/v1/admin/logout`, {
             method: 'POST',
             credentials: 'include',

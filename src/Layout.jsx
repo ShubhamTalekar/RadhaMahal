@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { Footer as FigmaFooter } from './components/sections/Footer';
 import { useApp } from './context/AppContext';
+import { config } from './lib/config';
 
 const ANNOUNCEMENT_REPEATS = 8;
 const DEFAULT_ANNOUNCEMENT = import.meta.env.VITE_ANNOUNCEMENT_TEXT || "Free shipping all over Maharashtra";
@@ -16,7 +17,7 @@ export default function Layout() {
     const [announcement, setAnnouncement] = useState(DEFAULT_ANNOUNCEMENT);
 
     useEffect(() => {
-        const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+        const BASE = config.API_BASE_URL;
         fetch(`${BASE}/api/v1/public/banner`)
             .then(r => r.json())
             .then(data => {

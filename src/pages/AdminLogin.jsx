@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { markAdminLoggedIn } from '../lib/auth';
 import { toast } from 'sonner';
+import { config } from '../lib/config';
 
 export default function AdminLogin() {
     const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function AdminLogin() {
         setLoading(true);
 
         try {
-            const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+            const BASE = config.API_BASE_URL;
             const res = await fetch(`${BASE}/api/v1/admin/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

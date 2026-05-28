@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { Package, Users, Activity, LogOut, CheckCircle, Trash2, Heart, RefreshCw, Type } from 'lucide-react';
 import { adminLogout, isAdminAuthenticated } from '../lib/auth';
+import { config } from '../lib/config';
 
 export default function AdminDashboard() {
     const { user, setUser } = useApp();
@@ -28,7 +29,7 @@ export default function AdminDashboard() {
         if (activeTab === 'content' && !bannerLoaded) {
             const fetchBanner = async () => {
                 try {
-                    const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+                    const BASE = config.API_BASE_URL;
                     const response = await fetch(`${BASE}/api/v1/public/banner`);
                     const data = await response.json();
                     if (data.success && data.data) {
@@ -45,7 +46,7 @@ export default function AdminDashboard() {
         e.preventDefault();
         setSavingBanner(true);
         try {
-            const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+            const BASE = config.API_BASE_URL;
             
             const formData = new FormData();
             formData.append('titlePrefix', bannerConfig.titlePrefix);
@@ -93,7 +94,7 @@ export default function AdminDashboard() {
 
         const fetchDashboardData = async () => {
             try {
-                const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+                const BASE = config.API_BASE_URL;
                 const response = await fetch(`${BASE}/api/v1/admin/dashboard`, {
                     credentials: 'include',
                 });
@@ -130,7 +131,7 @@ export default function AdminDashboard() {
         if (!window.confirm(`Are you sure you want to delete ${email}?`)) return;
         
         try {
-            const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+            const BASE = config.API_BASE_URL;
             const response = await fetch(`${BASE}/api/v1/admin/users/delete`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
@@ -440,7 +441,7 @@ export default function AdminDashboard() {
                                             <label className="block text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-2 mt-6">Background Image Upload</label>
                                             <div className="flex items-center gap-4 bg-[#fdfbf7] border border-primary/10 rounded p-4">
                                                 {(bannerConfig.previewUrl || bannerConfig.imageUrl) && (
-                                                    <img src={bannerConfig.previewUrl || (bannerConfig.imageUrl.startsWith('/') ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'}${bannerConfig.imageUrl}` : bannerConfig.imageUrl)} 
+                                                    <img src={bannerConfig.previewUrl || (bannerConfig.imageUrl.startsWith('/') ? `${config.API_BASE_URL}${bannerConfig.imageUrl}` : bannerConfig.imageUrl)} 
                                                          alt="Preview" className="w-16 h-16 rounded object-cover shadow-sm" />
                                                 )}
                                                 <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => {

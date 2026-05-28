@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
+import { config } from "../../lib/config";
 
 const DEFAULTS = {
   titlePrefix: "Wedding &",
@@ -22,7 +23,7 @@ export function FestiveBanner() {
   const [cfg, setCfg] = useState(DEFAULTS);
 
   useEffect(() => {
-    const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
+    const BASE = config.API_BASE_URL;
     fetch(`${BASE}/api/v1/public/banner`)
       .then((r) => r.json())
       .then((data) => {
@@ -34,7 +35,7 @@ export function FestiveBanner() {
   }, []);
 
   // Resolve image URL (local uploads have a leading slash)
-  const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
+  const BASE = config.API_BASE_URL;
   const imageSrc =
     cfg.imageUrl && cfg.imageUrl.startsWith("/")
       ? `${BASE}${cfg.imageUrl}`
