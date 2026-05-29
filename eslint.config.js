@@ -28,4 +28,19 @@ export default defineConfig([
             'no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
         },
     },
+    // Server (Node.js) files — use Node globals so `process`, `__dirname`, etc. are recognized
+    {
+        files: ['server/**/*.js'],
+        languageOptions: {
+            ecmaVersion: 2020,
+            globals: globals.node,
+            parserOptions: {
+                ecmaVersion: 'latest',
+                sourceType: 'module',
+            },
+        },
+        rules: {
+            'no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
+        },
+    },
 ]);

@@ -28,26 +28,35 @@ app.set('trust proxy', 1);
 app.use(timeout('15s'));
 
 // Security: Helmet headers (disable CSP to allow Vite/Cloudflare inline scripts)
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(
+    helmet({
+        contentSecurityPolicy: false,
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+    })
+);
 
 // Logging: Pino HTTP logger
-app.use(pinoHttp({
-    autoLogging: {
-        ignore: req => req.url.includes('/assets/') || req.url === '/favicon.ico',
-    },
-}));
+app.use(
+    pinoHttp({
+        autoLogging: {
+            ignore: req => req.url.includes('/assets/') || req.url === '/favicon.ico',
+        },
+    })
+);
 
 // Security: CORS whitelist — credentials: true needed for HttpOnly admin cookie
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        if (CORS_ORIGINS.includes(origin)) {
-            return callback(null, true);
-        }
-        return callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-}));
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            if (!origin) return callback(null, true);
+            if (CORS_ORIGINS.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error('Not allowed by CORS'));
+        },
+        credentials: true,
+    })
+);
 
 // Security: Limit payload sizes to prevent DoS
 app.use(express.json({ limit: '1mb' }));
@@ -67,9 +76,13 @@ app.get('/healthz', (_req, res) => res.json({ status: 'ok', ts: Date.now() }));
 // API docs — only in non-production to avoid exposing the full API surface publicly.
 // In production, access the raw spec via authenticated means or use a local dev build.
 if (NODE_ENV !== 'production') {
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-        customSiteTitle: 'Radha Mahal API Docs',
-    }));
+    app.use(
+        '/api-docs',
+        swaggerUi.serve,
+        swaggerUi.setup(swaggerSpec, {
+            customSiteTitle: 'Radha Mahal API Docs',
+        })
+    );
     // Serve raw OpenAPI JSON for tooling (Postman import, etc.)
     app.get('/api-docs.json', (_req, res) => res.json(swaggerSpec));
 }
