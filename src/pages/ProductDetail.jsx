@@ -268,8 +268,8 @@ export default function ProductDetail() {
                                 
                                 return (
                                     <div className="space-y-4">
-                                        <button disabled onClick={(e) => e.preventDefault()} className="w-full py-5 rounded-full font-bold uppercase tracking-widest transition-all bg-surface-container-highest text-outline cursor-not-allowed border border-outline-variant/30">
-                                            Sold Out
+                                        <button disabled onClick={(e) => e.preventDefault()} className="w-full py-5 rounded-full font-bold uppercase tracking-widest transition-all bg-white text-outline cursor-not-allowed border border-outline-variant/30">
+                                            Out of Stock
                                         </button>
                                         {notifyStatus === 'success' ? (
                                             <div className="p-4 bg-green-900/20 text-green-600 text-center rounded-lg text-sm font-bold border border-green-600/30">

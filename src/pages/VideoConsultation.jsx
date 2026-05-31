@@ -16,34 +16,72 @@ export default function VideoConsultation() {
     });
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
 
-    // Sync form with user data when user logs in
-    useEffect(() => {
-        if (user) {
-            setFormData(prev => ({
-                ...prev,
-                name: prev.name || user.name || '',
-                email: prev.email || user.email || '',
-                phone: prev.phone || user.phone || '',
-            }));
-        }
-    }, [user]);
+
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const validate = () => {
+        const newErrors = {};
+        if (!formData.name.trim()) {
+            newErrors.name = 'Full name is required';
+        } else if (formData.name.trim().length < 2) {
+            newErrors.name = 'Name must be at least 2 characters';
+        }
+
+        const phoneRegex = /^[+]?[0-9\s\-()]{10,18}$/;
+        if (!formData.phone.trim()) {
+            newErrors.phone = 'Phone number is required';
+        } else if (!phoneRegex.test(formData.phone.trim())) {
+            newErrors.phone = 'Please enter a valid phone number (min 10 digits)';
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email address is required';
+        } else if (!emailRegex.test(formData.email)) {
+            newErrors.email = 'Please enter a valid email address';
+        }
+
+        if (!formData.date) {
+            newErrors.date = 'Preferred date is required';
+        } else {
+            const selectedDate = new Date(formData.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (selectedDate < today) {
+                newErrors.date = 'Date cannot be in the past';
+            }
+        }
+
+        if (!formData.time) {
+            newErrors.time = 'Preferred time is required';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validate()) return;
         setIsSubmitting(true);
         try {
             await api.post('/api/v1/consultation', formData);
             setIsSubmitting(false);
             setIsSubmitted(true);
+            setErrors({});
             setTimeout(() => setIsSubmitted(false), 5000);
             setFormData({ name: '', email: '', phone: '', date: '', time: '' });
         } catch (err) {
@@ -144,27 +182,32 @@ export default function VideoConsultation() {
                             <h3 className="text-3xl font-headline text-primary mb-2">Book Your Session</h3>
                             <p className="text-sm text-on-surface-variant mb-10">Reserve your complimentary 45-minute styling consultation.</p>
 
-                            <form onSubmit={handleSubmit} className="space-y-8">
+                            <form onSubmit={handleSubmit} className="space-y-8" noValidate>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="relative group">
-                                        <input required name="name" value={formData.name} onChange={handleChange} className="w-full bg-transparent border-0 border-b border-outline/30 focus:ring-0 focus:border-[#d4af37] transition-all py-3 px-0 text-on-surface font-body peer" placeholder=" " type="text" />
+                                        <input name="name" value={formData.name} onChange={handleChange} className={`w-full bg-transparent border-0 border-b ${errors.name ? 'border-red-500' : 'border-outline/30'} focus:ring-0 focus:border-[#d4af37] transition-all py-3 px-0 text-on-surface font-body peer`} placeholder=" " type="text" />
                                         <label className="absolute left-0 top-3 text-sm font-label uppercase tracking-widest text-outline -translate-y-6 scale-75 origin-[0] peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-6 peer-focus:scale-75 transition-all">Full Name</label>
+                                        {errors.name && <p className="text-red-500 text-xs font-body font-medium mt-1">{errors.name}</p>}
                                     </div>
                                     <div className="relative group">
-                                        <input required name="phone" value={formData.phone} onChange={handleChange} className="w-full bg-transparent border-0 border-b border-outline/30 focus:ring-0 focus:border-[#d4af37] transition-all py-3 px-0 text-on-surface font-body peer" placeholder=" " type="tel" />
+                                        <input name="phone" value={formData.phone} onChange={handleChange} className={`w-full bg-transparent border-0 border-b ${errors.phone ? 'border-red-500' : 'border-outline/30'} focus:ring-0 focus:border-[#d4af37] transition-all py-3 px-0 text-on-surface font-body peer`} placeholder=" " type="tel" />
                                         <label className="absolute left-0 top-3 text-sm font-label uppercase tracking-widest text-outline -translate-y-6 scale-75 origin-[0] peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-6 peer-focus:scale-75 transition-all">Phone Number</label>
+                                        {errors.phone && <p className="text-red-500 text-xs font-body font-medium mt-1">{errors.phone}</p>}
                                     </div>
                                     <div className="relative group md:col-span-2">
-                                        <input required name="email" value={formData.email} onChange={handleChange} className="w-full bg-transparent border-0 border-b border-outline/30 focus:ring-0 focus:border-[#d4af37] transition-all py-3 px-0 text-on-surface font-body peer" placeholder=" " type="email" />
+                                        <input name="email" value={formData.email} onChange={handleChange} className={`w-full bg-transparent border-0 border-b ${errors.email ? 'border-red-500' : 'border-outline/30'} focus:ring-0 focus:border-[#d4af37] transition-all py-3 px-0 text-on-surface font-body peer`} placeholder=" " type="email" />
                                         <label className="absolute left-0 top-3 text-sm font-label uppercase tracking-widest text-outline -translate-y-6 scale-75 origin-[0] peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-6 peer-focus:scale-75 transition-all">Email Address</label>
+                                        {errors.email && <p className="text-red-500 text-xs font-body font-medium mt-1">{errors.email}</p>}
                                     </div>
                                     <div className="relative group">
-                                        <input required name="date" value={formData.date} onChange={handleChange} className="w-full bg-transparent border-0 border-b border-outline/30 focus:ring-0 focus:border-[#d4af37] transition-all py-3 px-0 text-on-surface font-body peer text-sm" type="date" />
+                                        <input name="date" value={formData.date} onChange={handleChange} className={`w-full bg-transparent border-0 border-b ${errors.date ? 'border-red-500' : 'border-outline/30'} focus:ring-0 focus:border-[#d4af37] transition-all py-3 px-0 text-on-surface font-body peer text-sm`} type="date" />
                                         <label className="absolute left-0 top-3 text-sm font-label uppercase tracking-widest text-outline -translate-y-6 scale-75 origin-[0] peer-focus:-translate-y-6 peer-focus:scale-75 transition-all">Preferred Date</label>
+                                        {errors.date && <p className="text-red-500 text-xs font-body font-medium mt-1">{errors.date}</p>}
                                     </div>
                                     <div className="relative group">
-                                        <input required name="time" value={formData.time} onChange={handleChange} className="w-full bg-transparent border-0 border-b border-outline/30 focus:ring-0 focus:border-[#d4af37] transition-all py-3 px-0 text-on-surface font-body peer text-sm" type="time" />
+                                        <input name="time" value={formData.time} onChange={handleChange} className={`w-full bg-transparent border-0 border-b ${errors.time ? 'border-red-500' : 'border-outline/30'} focus:ring-0 focus:border-[#d4af37] transition-all py-3 px-0 text-on-surface font-body peer text-sm`} type="time" />
                                         <label className="absolute left-0 top-3 text-sm font-label uppercase tracking-widest text-outline -translate-y-6 scale-75 origin-[0] peer-focus:-translate-y-6 peer-focus:scale-75 transition-all">Preferred Time</label>
+                                        {errors.time && <p className="text-red-500 text-xs font-body font-medium mt-1">{errors.time}</p>}
                                     </div>
                                 </div>
                                 

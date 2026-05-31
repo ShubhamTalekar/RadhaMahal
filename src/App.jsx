@@ -36,11 +36,24 @@ function ScrollToTop() {
 }
 
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    try {
+      return !sessionStorage.getItem('splash_shown');
+    } catch {
+      return true;
+    }
+  });
+
+  const handleSplashComplete = () => {
+    try {
+      sessionStorage.setItem('splash_shown', 'true');
+    } catch (e) {}
+    setShowSplash(false);
+  };
 
   return (
     <AppProvider>
-      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
@@ -48,9 +61,9 @@ function App() {
             <Route index element={<Home />} />
           <Route path="catalog" element={<ProductCatalog />} />
           <Route path="product/:id" element={<ErrorBoundary><ProductDetail /></ErrorBoundary>} />
-          <Route path="bag" element={<AuthGuard><ShoppingBag /></AuthGuard>} />
+          <Route path="bag" element={<ShoppingBag />} />
           <Route path="checkout" element={<AuthGuard><ErrorBoundary><Checkout /></ErrorBoundary></AuthGuard>} />
-          <Route path="wishlist" element={<AuthGuard><Wishlist /></AuthGuard>} />
+          <Route path="wishlist" element={<Wishlist />} />
           <Route path="profile" element={<AuthGuard><Profile /></AuthGuard>} />
           <Route path="our-story" element={<OurStory />} />
           <Route path="size-guide" element={<SizeGuide />} />

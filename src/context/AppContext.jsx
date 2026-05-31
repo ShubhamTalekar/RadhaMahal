@@ -7,8 +7,22 @@ const AppContext = createContext(null);
 export function AppProvider({ children }) {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')) || null);
 
-  const [bag, setBag] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
+  const [bag, setBag] = useState(() => {
+    try {
+      const localBag = localStorage.getItem('guest_bag');
+      return localBag ? JSON.parse(localBag) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const localWishlist = localStorage.getItem('guest_wishlist');
+      return localWishlist ? JSON.parse(localWishlist) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const [categories, setCategories] = useState([]);
   const [occasions,  setOccasions]  = useState([]);
@@ -30,6 +44,10 @@ export function AppProvider({ children }) {
       if (!currEmail) {
         setBag([]);
         setWishlist([]);
+        try {
+          localStorage.removeItem('guest_bag');
+          localStorage.removeItem('guest_wishlist');
+        } catch (e) {}
         setIsBagLoaded(false);
         setIsWishlistLoaded(false);
       }
@@ -38,20 +56,53 @@ export function AppProvider({ children }) {
     if (currEmail) {
       // Async fetch bag and wishlist from Supabase
       const fetchData = async () => {
+        let finalBag = [];
         const { data: bagData } = await supabase.from('shopping_bags').select('items').eq('email', currEmail).single();
         if (bagData?.items) {
-           setBag(bagData.items);
-        } else {
-           setBag([]);
+           finalBag = bagData.items;
         }
+        
+        // Merge guest items if present
+        try {
+          const guestBag = JSON.parse(localStorage.getItem('guest_bag') || '[]');
+          if (guestBag.length > 0) {
+            guestBag.forEach(guestItem => {
+              const existingIndex = finalBag.findIndex(item => item.variantId === guestItem.variantId);
+              if (existingIndex > -1) {
+                finalBag[existingIndex].quantity += guestItem.quantity;
+              } else {
+                finalBag.push(guestItem);
+              }
+            });
+            localStorage.removeItem('guest_bag');
+          }
+        } catch (e) {
+          console.error("Failed to merge guest bag", e);
+        }
+        setBag(finalBag);
         setIsBagLoaded(true);
 
+        let finalWl = [];
         const { data: wlData } = await supabase.from('wishlists').select('items').eq('email', currEmail).single();
         if (wlData?.items) {
-           setWishlist(wlData.items);
-        } else {
-           setWishlist([]);
+           finalWl = wlData.items;
         }
+
+        // Merge guest wishlist if present
+        try {
+          const guestWl = JSON.parse(localStorage.getItem('guest_wishlist') || '[]');
+          if (guestWl.length > 0) {
+            guestWl.forEach(guestItem => {
+              if (!finalWl.some(item => item.id === guestItem.id)) {
+                finalWl.push(guestItem);
+              }
+            });
+            localStorage.removeItem('guest_wishlist');
+          }
+        } catch (e) {
+          console.error("Failed to merge guest wishlist", e);
+        }
+        setWishlist(finalWl);
         setIsWishlistLoaded(true);
       };
       
@@ -93,26 +144,34 @@ export function AppProvider({ children }) {
     hydrateCustomer();
   }, []);
 
-  /* ── Persist bag changes to Supabase ──────────────────────── */
+  /* ── Persist bag changes ──────────────────────── */
   useEffect(() => {
-    if (!user?.email || !isBagLoaded) return;
-    
-    const timer = setTimeout(async () => {
-      await supabase.from('shopping_bags').upsert({ email: user.email, items: bag }, { onConflict: 'email' });
-    }, 1500);
-
-    return () => clearTimeout(timer);
+    if (!isBagLoaded) return;
+    if (user?.email) {
+      const timer = setTimeout(async () => {
+        await supabase.from('shopping_bags').upsert({ email: user.email, items: bag }, { onConflict: 'email' });
+      }, 1500);
+      return () => clearTimeout(timer);
+    } else {
+      try {
+        localStorage.setItem('guest_bag', JSON.stringify(bag));
+      } catch (e) {}
+    }
   }, [bag, user, isBagLoaded]);
 
-  /* ── Persist wishlist changes to Supabase ─────────────────── */
+  /* ── Persist wishlist changes ─────────────────── */
   useEffect(() => {
-    if (!user?.email || !isWishlistLoaded) return;
-
-    const timer = setTimeout(async () => {
-      await supabase.from('wishlists').upsert({ email: user.email, items: wishlist }, { onConflict: 'email' });
-    }, 1500);
-
-    return () => clearTimeout(timer);
+    if (!isWishlistLoaded) return;
+    if (user?.email) {
+      const timer = setTimeout(async () => {
+        await supabase.from('wishlists').upsert({ email: user.email, items: wishlist }, { onConflict: 'email' });
+      }, 1500);
+      return () => clearTimeout(timer);
+    } else {
+      try {
+        localStorage.setItem('guest_wishlist', JSON.stringify(wishlist));
+      } catch (e) {}
+    }
   }, [wishlist, user, isWishlistLoaded]);
 
   /* ── Load Shopify categories & occasions ─────────────────────────── */

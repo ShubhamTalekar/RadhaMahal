@@ -47,8 +47,22 @@ export default function Checkout() {
             })), shippingDetails, user?.email);
 
             if (shopifyCartData?.cart?.checkoutUrl) {
-                // Clear local bag before redirecting to Shopify
+                // Clear local bag
                 setBag([]);
+                
+                // Immediately clear from Supabase if logged in, or local guest_bag
+                if (user?.email) {
+                    try {
+                        const { supabase } = await import('../supabaseClient');
+                        await supabase.from('shopping_bags').upsert({ email: user.email, items: [] }, { onConflict: 'email' });
+                    } catch (e) {
+                        console.error("Failed to clear remote bag", e);
+                    }
+                } else {
+                    try {
+                        localStorage.removeItem('guest_bag');
+                    } catch (e) {}
+                }
                 
                 let checkoutUrl = shopifyCartData.cart.checkoutUrl;
                 // Rewrite the URL if Shopify uses the headless Vercel domain as primary
@@ -209,14 +223,6 @@ export default function Checkout() {
                             <div className="flex justify-between text-sm">
                                 <span className="text-on-surface-variant uppercase tracking-widest font-label">Subtotal</span>
                                 <span className="font-headline">₹{subtotal.toLocaleString('en-IN')}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-on-surface-variant uppercase tracking-widest font-label">Shipping</span>
-                                <span className={"text-secondary uppercase text-[10px] tracking-widest"}>Calculated at next step</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-on-surface-variant uppercase tracking-widest font-label">Taxes</span>
-                                <span className={"text-secondary uppercase text-[10px] tracking-widest"}>Calculated at next step</span>
                             </div>
                             <div className="flex justify-between pt-6 mt-4 border-t border-outline-variant/30 text-xl">
                                 <span className="font-headline text-secondary uppercase tracking-widest">Total</span>

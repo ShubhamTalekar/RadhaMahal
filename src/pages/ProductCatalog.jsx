@@ -46,6 +46,20 @@ export default function ProductCatalog() {
         }
     });
 
+    const [openSections, setOpenSections] = useState({
+        categories: false,
+        colors: false,
+        price: false,
+        occasions: false
+    });
+
+    const toggleSection = (section) => {
+        setOpenSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
+
     useEffect(() => {
         let mounted = true;
         getProducts()
@@ -203,94 +217,162 @@ export default function ProductCatalog() {
                         {searchQuery ? `"${searchQuery}"` : 'The Collection'}
                     </h1>
                     <div className="w-24 h-px bg-secondary/40 mx-auto"></div>
+                    <p className="text-[#e9c349]/80 font-body text-xs md:text-sm mt-6 uppercase tracking-[0.25em] font-medium">
+                        {selectedCategory || (selectedOccasions.length > 0 ? selectedOccasions[0] : (searchQuery ? `Search: ${searchQuery}` : 'Collection'))}
+                    </p>
                 </div>
             </section>
 
             {/* Product Listing Layout */}
             <div className="max-w-screen-2xl mx-auto px-8 md:px-12 py-20 flex flex-col md:flex-row gap-16 relative">
-                {/* Sidebar Filtering */}
-                <aside className="w-full md:w-72 flex-shrink-0 space-y-12 bg-[#e9c349]/5 p-8 rounded-2xl border border-[#e9c349]/10 h-fit sticky top-32 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.1)] z-10">
-                    {/* Category Filter */}
-                    <div>
-                        <h3 className="font-headline text-secondary text-lg uppercase tracking-widest mb-6">Categories</h3>
-                        <ul className="space-y-4">
-                            {categories.map(cat => (
-                                <li key={cat}>
-                                    <button
-                                        onClick={() => { setSelectedCategory(cat === selectedCategory ? null : cat); setCurrentPage(1); }}
-                                        className={`${cat === selectedCategory ? 'text-secondary font-bold' : 'text-on-surface-variant hover:text-secondary'} transition-colors flex justify-between items-center group w-full text-left`}
-                                    >
-                                        {cat}
-                                        {cat === selectedCategory ?
-                                            <span className="material-symbols-outlined text-sm opacity-100">chevron_right</span> :
-                                            <span className="text-xs text-outline opacity-0 group-hover:opacity-100 transition-opacity">Explore</span>
-                                        }
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                    {/* Color Filter */}
-                    <div>
-                        <h3 className="font-headline text-secondary text-lg uppercase tracking-widest mb-6">Color</h3>
-                        <div className="flex flex-wrap gap-3">
-                            {availableColors.map(c => {
-                                const lower = c.toLowerCase();
-                                const mappedColor = colorMapHex[lower] || lower.split(' ').pop();
-                                
-                                return (
-                                    <button
-                                        key={c}
-                                        onClick={() => {
-                                            setSelectedColors(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
-                                            setCurrentPage(1);
-                                        }}
-                                        style={{ backgroundColor: mappedColor }}
-                                        className={`w-8 h-8 rounded-full transition-all duration-300 ${mappedColor === '#ffffff' ? 'border border-black' : 'border border-white/20'} ${selectedColors.includes(c) ? 'ring-offset-2 ring-offset-[#250624] ring-2 ring-[#e9c349] shadow-[0_0_15px_rgba(233,195,73,0.5)] scale-110' : 'opacity-70 hover:opacity-100 hover:scale-110 hover:shadow-lg hover:border-white/40'}`}
-                                        title={c}
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
-                    {/* Price Range */}
-                    <div>
-                        <h3 className="font-headline text-secondary text-lg uppercase tracking-widest mb-6">Price Range</h3>
-                        <input
-                            className="w-full h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-secondary"
-                            type="range" min={minPrice} max={maxPrice} step={Math.max(1000, Math.floor((maxPrice - minPrice) / 20))}
-                            value={currentPriceRange}
-                            onChange={(e) => { setPriceRange(Number(e.target.value)); setCurrentPage(1); }}
-                        />
-                        <div className="flex justify-between mt-4 text-sm text-on-surface-variant font-medium">
-                            <span>₹{minPrice.toLocaleString('en-IN')}</span>
-                            <span>₹{currentPriceRange.toLocaleString('en-IN')}{currentPriceRange >= maxPrice ? '+' : ''}</span>
-                        </div>
-                    </div>
-                    {/* Occasion Filter */}
-                    {availableOccasions.length > 0 && (
-                        <div>
-                            <h3 className="font-headline text-secondary text-lg uppercase tracking-widest mb-6">Occasion</h3>
-                            <div className="space-y-3">
-                                {availableOccasions.map(occ => (
-                                    <label key={occ} className="flex items-center gap-3 cursor-pointer group">
-                                        <input
-                                            className="form-checkbox w-5 h-5 bg-black/20 border-[#e9c349]/30 text-[#e9c349] rounded focus:ring-[#e9c349]/30 focus:ring-offset-[#250624] transition-all cursor-pointer"
-                                            type="checkbox"
-                                            checked={selectedOccasions.includes(occ)}
-                                            onChange={(e) => {
-                                                if (e.target.checked) setSelectedOccasions([...selectedOccasions, occ]);
-                                                else setSelectedOccasions(selectedOccasions.filter(x => x !== occ));
-                                                setCurrentPage(1);
-                                            }}
-                                        />
-                                        <span className="text-on-surface-variant group-hover:text-secondary transition-colors">{occ}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </aside>
+                 {/* Sidebar Filtering */}
+                 <aside className="w-full md:w-72 flex-shrink-0 space-y-6 bg-[#e9c349]/5 p-8 rounded-2xl border border-[#e9c349]/10 h-fit sticky top-32 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.1)] z-10 font-headline">
+                     {/* Category Filter */}
+                     <div className="border-b border-[#e9c349]/10 pb-6">
+                         <button
+                             onClick={() => toggleSection('categories')}
+                             className="w-full flex justify-between items-center text-left focus:outline-none group"
+                         >
+                             <h3 className="font-headline text-secondary text-lg uppercase tracking-widest">Categories</h3>
+                             <span className={`material-symbols-outlined text-secondary text-sm transition-transform duration-300 ${openSections.categories ? 'rotate-180' : ''}`}>
+                                 expand_more
+                             </span>
+                         </button>
+                         <motion.div
+                             initial={false}
+                             animate={{ height: openSections.categories ? 'auto' : 0, opacity: openSections.categories ? 1 : 0 }}
+                             transition={{ duration: 0.3, ease: 'easeInOut' }}
+                             className="overflow-hidden"
+                         >
+                             <ul className="space-y-4 pt-6">
+                                 {categories.map(cat => (
+                                     <li key={cat}>
+                                         <button
+                                             onClick={() => { setSelectedCategory(cat === selectedCategory ? null : cat); setCurrentPage(1); }}
+                                             className={`${cat === selectedCategory ? 'text-secondary font-bold' : 'text-on-surface-variant hover:text-secondary'} transition-colors flex justify-between items-center group w-full text-left`}
+                                         >
+                                             {cat}
+                                             {cat === selectedCategory ?
+                                                 <span className="material-symbols-outlined text-sm opacity-100">chevron_right</span> :
+                                                 <span className="text-xs text-outline opacity-0 group-hover:opacity-100 transition-opacity">Explore</span>
+                                             }
+                                         </button>
+                                     </li>
+                                 ))}
+                             </ul>
+                         </motion.div>
+                     </div>
+
+                     {/* Color Filter */}
+                     <div className="border-b border-[#e9c349]/10 pb-6">
+                         <button
+                             onClick={() => toggleSection('colors')}
+                             className="w-full flex justify-between items-center text-left focus:outline-none group"
+                         >
+                             <h3 className="font-headline text-secondary text-lg uppercase tracking-widest">Color</h3>
+                             <span className={`material-symbols-outlined text-secondary text-sm transition-transform duration-300 ${openSections.colors ? 'rotate-180' : ''}`}>
+                                 expand_more
+                             </span>
+                         </button>
+                         <motion.div
+                             initial={false}
+                             animate={{ height: openSections.colors ? 'auto' : 0, opacity: openSections.colors ? 1 : 0 }}
+                             transition={{ duration: 0.3, ease: 'easeInOut' }}
+                             className="overflow-hidden"
+                         >
+                             <div className="flex flex-wrap gap-3 pt-6">
+                                 {availableColors.map(c => {
+                                     const lower = c.toLowerCase();
+                                     const mappedColor = colorMapHex[lower] || lower.split(' ').pop();
+                                     
+                                     return (
+                                         <button
+                                             key={c}
+                                             onClick={() => {
+                                                 setSelectedColors(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
+                                                 setCurrentPage(1);
+                                             }}
+                                             style={{ backgroundColor: mappedColor }}
+                                             className={`w-8 h-8 rounded-full transition-all duration-300 ${mappedColor === '#ffffff' ? 'border border-black' : 'border border-white/20'} ${selectedColors.includes(c) ? 'ring-offset-2 ring-offset-[#250624] ring-2 ring-[#e9c349] shadow-[0_0_15px_rgba(233,195,73,0.5)] scale-110' : 'opacity-70 hover:opacity-100 hover:scale-110 hover:shadow-lg hover:border-white/40'}`}
+                                             title={c}
+                                         />
+                                     );
+                                 })}
+                             </div>
+                         </motion.div>
+                     </div>
+
+                     {/* Price Range */}
+                     <div className="border-b border-[#e9c349]/10 pb-6">
+                         <button
+                             onClick={() => toggleSection('price')}
+                             className="w-full flex justify-between items-center text-left focus:outline-none group"
+                         >
+                             <h3 className="font-headline text-secondary text-lg uppercase tracking-widest">Price Range</h3>
+                             <span className={`material-symbols-outlined text-secondary text-sm transition-transform duration-300 ${openSections.price ? 'rotate-180' : ''}`}>
+                                 expand_more
+                             </span>
+                         </button>
+                         <motion.div
+                             initial={false}
+                             animate={{ height: openSections.price ? 'auto' : 0, opacity: openSections.price ? 1 : 0 }}
+                             transition={{ duration: 0.3, ease: 'easeInOut' }}
+                             className="overflow-hidden"
+                         >
+                             <div className="pt-6">
+                                 <input
+                                     className="w-full h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-secondary"
+                                     type="range" min={minPrice} max={maxPrice} step={Math.max(1000, Math.floor((maxPrice - minPrice) / 20))}
+                                     value={currentPriceRange}
+                                     onChange={(e) => { setPriceRange(Number(e.target.value)); setCurrentPage(1); }}
+                                 />
+                                 <div className="flex justify-between mt-4 text-sm text-on-surface-variant font-medium">
+                                     <span>₹{minPrice.toLocaleString('en-IN')}</span>
+                                     <span>₹{currentPriceRange.toLocaleString('en-IN')}{currentPriceRange >= maxPrice ? '+' : ''}</span>
+                                 </div>
+                             </div>
+                         </motion.div>
+                     </div>
+
+                     {/* Occasion Filter */}
+                     {availableOccasions.length > 0 && (
+                         <div className="pb-2">
+                             <button
+                                 onClick={() => toggleSection('occasions')}
+                                 className="w-full flex justify-between items-center text-left focus:outline-none group"
+                             >
+                                 <h3 className="font-headline text-secondary text-lg uppercase tracking-widest">Occasion</h3>
+                                 <span className={`material-symbols-outlined text-secondary text-sm transition-transform duration-300 ${openSections.occasions ? 'rotate-180' : ''}`}>
+                                     expand_more
+                                 </span>
+                             </button>
+                             <motion.div
+                                 initial={false}
+                                 animate={{ height: openSections.occasions ? 'auto' : 0, opacity: openSections.occasions ? 1 : 0 }}
+                                 transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                 className="overflow-hidden"
+                             >
+                                 <div className="space-y-3 pt-6">
+                                     {availableOccasions.map(occ => (
+                                         <label key={occ} className="flex items-center gap-3 cursor-pointer group">
+                                             <input
+                                                 className="form-checkbox w-5 h-5 bg-black/20 border-[#e9c349]/30 text-[#e9c349] rounded focus:ring-[#e9c349]/30 focus:ring-offset-[#250624] transition-all cursor-pointer"
+                                                 type="checkbox"
+                                                 checked={selectedOccasions.includes(occ)}
+                                                 onChange={(e) => {
+                                                     if (e.target.checked) setSelectedOccasions([...selectedOccasions, occ]);
+                                                     else setSelectedOccasions(selectedOccasions.filter(x => x !== occ));
+                                                     setCurrentPage(1);
+                                                 }}
+                                             />
+                                             <span className="text-on-surface-variant group-hover:text-secondary transition-colors font-headline">{occ}</span>
+                                         </label>
+                                     ))}
+                                 </div>
+                             </motion.div>
+                         </div>
+                     )}
+                 </aside>
 
                 {/* Main Product Grid */}
                 <div className="flex-1">
@@ -373,7 +455,7 @@ export default function ProductCatalog() {
 
                                         {(!product.availableForSale) && (
                                             <div className="absolute inset-0 bg-[#250624]/40 z-[15] flex items-center justify-center pointer-events-none transition-all duration-500 group-hover/image:bg-[#250624]/20">
-                                                <span className="bg-[#111111]/80 backdrop-blur-md px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-[8px] sm:text-[10px] uppercase font-bold tracking-widest text-[#e9c349] border border-[#e9c349]/20 shadow-2xl tracking-[0.2em]">Sold Out</span>
+                                                <span className="bg-white backdrop-blur-md px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-[8px] sm:text-[10px] uppercase font-bold tracking-widest text-[#250624] border border-white/20 shadow-2xl tracking-[0.2em]">Out of Stock</span>
                                             </div>
                                         )}
 

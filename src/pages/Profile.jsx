@@ -136,7 +136,7 @@ export default function Profile() {
         const x = acc.find(item => item.id === current.id);
         if (!x) return acc.concat([current]);
         return acc;
-    }, []);
+    }, []).sort((a, b) => Number(b.id) - Number(a.id));
 
     const latestOrder = allOrders[0];
 

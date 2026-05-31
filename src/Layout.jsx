@@ -45,7 +45,7 @@ export default function Layout() {
     return (
         <div className="bg-surface text-on-surface font-body selection:bg-secondary selection:text-on-secondary min-h-screen flex flex-col overflow-x-hidden">
             {/* Top Navigation Bar */}
-            <header className="sticky top-0 z-50 bg-gradient-to-r from-primary via-primary to-primary text-[#fdfbf7] shadow-2xl border-b-2 border-secondary font-sans leading-relaxed">
+            <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary via-primary to-primary text-[#fdfbf7] shadow-2xl border-b-2 border-secondary font-body leading-relaxed">
                 {/* Announcement Marquee */}
                 <div className="bg-[#d4af37] text-primary py-2 overflow-hidden flex whitespace-nowrap">
                     <div className="animate-marquee inline-block font-headline text-[10px] lg:text-sm tracking-[0.2em] uppercase font-bold">
@@ -94,7 +94,7 @@ export default function Layout() {
                     </div>
 
                     {/* Centered Nav Items */}
-                    <nav className="hidden lg:flex justify-center items-center gap-10 font-sans text-white font-bold text-[14px] tracking-wide" >
+                    <nav className="hidden lg:flex justify-center items-center gap-10 font-body text-white font-bold text-[14px] tracking-wide" >
                         <div className="relative group py-4">
                             <button className="flex items-center gap-1 relative text-sm font-semibold tracking-wide hover:text-secondary transition-colors duration-300">
                                 Shop <span className="material-symbols-outlined text-[1.1rem]">arrow_drop_down</span>
@@ -144,7 +144,7 @@ export default function Layout() {
                     </nav>
 
                     {/* Action Icons */}
-                    <div className="flex justify-end items-center gap-3 lg:gap-5 text-white">
+                    <div className="flex justify-end items-center gap-3 lg:gap-5 text-white leading-none">
                         <div className="relative flex items-center">
                             <form onSubmit={handleSearch} className={`absolute top-full mt-6 right-0 bg-primary/95 backdrop-blur-xl border border-[#D4AF37]/20 shadow-[-10px_20px_30px_rgba(0,0,0,0.5)] rounded-xl transition-all duration-300 origin-top-right z-50 p-2 ${isSearchOpen ? 'w-80 opacity-100 scale-100' : 'w-80 opacity-0 scale-95 pointer-events-none'}`}>
                                 <input
@@ -165,12 +165,12 @@ export default function Layout() {
                                 } else {
                                     setIsSearchOpen(true);
                                 }
-                            }} className="hover:text-secondary hover:scale-110 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]">
+                            }} className="flex items-center hover:text-secondary hover:scale-110 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]">
                                 <span className="material-symbols-outlined">{isSearchOpen ? 'close' : 'search'}</span>
                             </button>
                         </div>
 
-                        <Link to="/wishlist" className="hover:text-secondary hover:scale-110 transition-all duration-300 relative hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]">
+                        <Link to="/wishlist" className="flex items-center hover:text-secondary hover:scale-110 transition-all duration-300 relative hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]">
                             <span className="material-symbols-outlined">favorite</span>
                             {wishlist.length > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-gradient-to-br from-secondary to-[#b8941f] text-primary rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold shadow-lg">
@@ -180,11 +180,11 @@ export default function Layout() {
                         </Link>
 
                         {user ? (
-                            <div className="relative group py-4 flex items-center">
-                                <span className="hover:text-secondary hover:scale-110 transition-all duration-300 relative hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] cursor-default">
+                            <div className="relative group flex items-center">
+                                <span className="flex items-center hover:text-secondary hover:scale-110 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] cursor-default">
                                     <span className="material-symbols-outlined">person_check</span>
                                 </span>
-                                <div className="absolute top-full right-0 mt-0 w-40 bg-primary border border-[#D4AF37]/20 shadow-[-5px_15px_30px_rgba(0,0,0,0.5)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 rounded-b-xl overflow-hidden backdrop-blur-2xl">
+                                <div className="absolute top-[calc(100%+0.5rem)] right-0 w-40 bg-primary border border-[#D4AF37]/20 shadow-[-5px_15px_30px_rgba(0,0,0,0.5)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 rounded-xl overflow-hidden backdrop-blur-2xl">
                                     <Link to="/profile" className="block px-6 py-4 text-xs tracking-widest text-[#e8e4e6] hover:text-primary hover:bg-secondary transition-colors border-b border-[#D4AF37]/10">
                                         Profile
                                     </Link>
@@ -194,12 +194,12 @@ export default function Layout() {
                                 </div>
                             </div>
                         ) : (
-                            <Link to="/login" className="hover:text-secondary hover:scale-110 transition-all duration-300 relative hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] flex items-center">
+                            <Link to="/login" className="flex items-center hover:text-secondary hover:scale-110 transition-all duration-300 relative hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]">
                                 <span className="material-symbols-outlined">person</span>
                             </Link>
                         )}
                         
-                        <Link to="/bag" className="hover:text-secondary hover:scale-110 transition-all duration-300 relative hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]">
+                        <Link to="/bag" className="flex items-center hover:text-secondary hover:scale-110 transition-all duration-300 relative hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]">
                             <span className="material-symbols-outlined">shopping_bag</span>
                             {bag.length > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-gradient-to-br from-secondary to-[#b8941f] text-primary rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold shadow-lg">
@@ -229,7 +229,7 @@ export default function Layout() {
                             <span className="material-symbols-outlined text-3xl">close</span>
                         </button>
                     </div>
-                    <nav className="flex-1 overflow-y-auto py-8 px-6 space-y-6 flex flex-col font-sans">
+                    <nav className="flex-1 overflow-y-auto py-8 px-6 space-y-6 flex flex-col font-body">
                         <div className="space-y-4">
                             <h3 className="text-secondary text-sm font-bold tracking-widest uppercase border-b border-outline-variant/30 pb-2">Shop Categories</h3>
                             {categories.map(cat => (
@@ -273,7 +273,7 @@ export default function Layout() {
                 </div>
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 pt-[calc(2rem+4rem+2px)] lg:pt-[calc(2rem+5rem+2px)]">
                 <Outlet />
             </div>
 

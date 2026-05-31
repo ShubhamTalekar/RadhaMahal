@@ -1,48 +1,15 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { createShopifyCart } from '../shopifyClient';
 import SEO from '../components/SEO';
 
 export default function ShoppingBag() {
-    const { bag, setBag, user } = useApp();
-    const [isProcessing, setIsProcessing] = useState(false);
+    const { bag, setBag } = useApp();
+    const navigate = useNavigate();
 
-    const handleCheckout = async () => {
+    const handleCheckout = () => {
         if (bag.length === 0) return;
-        setIsProcessing(true);
-        try {
-            const shopifyCartData = await createShopifyCart(bag.map(item => ({
-                variantId: item.variantId,
-                quantity: item.quantity
-            })), null, user?.email);
-
-            if (shopifyCartData?.cart?.checkoutUrl) {
-                setBag([]);
-                let checkoutUrl = shopifyCartData.cart.checkoutUrl;
-                
-                // Rewrite the URL if Shopify uses the headless Vercel domain as primary
-                const shopifyDomain = import.meta.env.VITE_SHOPIFY_DOMAIN || 'radha-mahal-2.myshopify.com';
-                try {
-                    const urlObj = new URL(checkoutUrl);
-                    if (urlObj.hostname !== shopifyDomain) {
-                        urlObj.hostname = shopifyDomain;
-                        checkoutUrl = urlObj.toString();
-                    }
-                } catch (e) {
-                    console.error("Failed to parse checkout URL", e);
-                }
-                
-                window.location.href = checkoutUrl;
-            } else {
-                alert("Shopify checkout is unavailable. Please check product availability.");
-                setIsProcessing(false);
-            }
-        } catch (error) {
-            console.error('Checkout error:', error);
-            alert(`Error: ${error.message}`);
-            setIsProcessing(false);
-        }
+        navigate('/checkout');
     };
 
     const updateQuantity = (cartItemId, delta) => {
@@ -60,8 +27,7 @@ export default function ShoppingBag() {
     };
 
     const subtotal = bag.reduce((sum, item) => sum + ((item.final_price || item.price) * item.quantity), 0);
-    const taxes = Math.round(subtotal * 0.05); // 5% estimated tax
-    const total = subtotal + taxes;
+    const total = subtotal;
     return (
         <main className="pt-12 pb-24 px-6 md:px-12 max-w-7xl mx-auto min-h-screen">
             <SEO 
@@ -134,21 +100,13 @@ export default function ShoppingBag() {
                                 <span>Subtotal</span>
                                 <span>₹{subtotal.toLocaleString('en-IN')}</span>
                             </div>
-                            <div className="flex justify-between text-on-surface-variant font-body">
-                                <span>Shipping</span>
-                                <span className={subtotal > 0 ? "text-primary italic" : "text-on-surface-variant"}>{subtotal > 0 ? 'Calculated at checkout' : '₹0'}</span>
-                            </div>
-                            <div className="flex justify-between text-on-surface-variant font-body">
-                                <span>Estimated Taxes</span>
-                                <span>₹{taxes.toLocaleString('en-IN')}</span>
-                            </div>
                             <div className="pt-4 mt-4 border-t border-outline-variant/20 flex justify-between items-end">
                                 <span className="font-headline text-lg">Total</span>
                                 <span className="font-headline text-3xl text-secondary">₹{total.toLocaleString('en-IN')}</span>
                             </div>
                         </div>
-                        <button onClick={handleCheckout} disabled={isProcessing || bag.length === 0} className={`block text-center w-full py-5 font-label uppercase tracking-[0.2em] text-xs font-bold rounded-full transition-all duration-300 shadow-lg ${bag.length > 0 && !isProcessing ? 'bg-secondary text-on-secondary hover:bg-secondary-fixed shadow-secondary/10 cursor-pointer' : 'bg-surface-container-highest text-outline cursor-not-allowed pointer-events-none'}`}>
-                            {isProcessing ? 'Redirecting...' : 'Proceed to Checkout'}
+                        <button onClick={handleCheckout} disabled={bag.length === 0} className={`block text-center w-full py-5 font-label uppercase tracking-[0.2em] text-xs font-bold rounded-full transition-all duration-300 shadow-lg ${bag.length > 0 ? 'bg-secondary text-on-secondary hover:bg-secondary-fixed shadow-secondary/10 cursor-pointer' : 'bg-surface-container-highest text-outline cursor-not-allowed pointer-events-none'}`}>
+                            Proceed to Checkout
                         </button>
                         <div className="mt-8 flex items-center justify-center gap-4 text-[10px] uppercase tracking-widest text-outline">
                             <span className="material-symbols-outlined text-sm">lock</span>

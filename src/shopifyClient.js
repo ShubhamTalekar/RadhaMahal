@@ -419,7 +419,7 @@ const CUSTOMER_QUERY = gql`
             lastName
             email
             phone
-            orders(first: 10) {
+            orders(first: 10, sortKey: PROCESSED_AT, reverse: true) {
                 edges {
                     node {
                         orderNumber

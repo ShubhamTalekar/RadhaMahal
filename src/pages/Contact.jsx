@@ -15,6 +15,7 @@ export default function Contact() {
     });
 
     const [status, setStatus] = useState('');
+    const [errors, setErrors] = useState({});
 
     // Sync form when user logs in mid-session
     useEffect(() => {
@@ -27,14 +28,47 @@ export default function Contact() {
         }
     }, [user]);
 
+    const validate = () => {
+        const newErrors = {};
+        if (!formData.name.trim()) {
+            newErrors.name = 'Name is required';
+        } else if (formData.name.trim().length < 2) {
+            newErrors.name = 'Name must be at least 2 characters';
+        }
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!emailRegex.test(formData.email)) {
+            newErrors.email = 'Please enter a valid email address';
+        }
+        
+        if (!formData.subject.trim()) {
+            newErrors.subject = 'Subject is required';
+        } else if (formData.subject.trim().length < 3) {
+            newErrors.subject = 'Subject must be at least 3 characters';
+        }
+        
+        if (!formData.message.trim()) {
+            newErrors.message = 'Message is required';
+        } else if (formData.message.trim().length < 10) {
+            newErrors.message = 'Message must be at least 10 characters';
+        }
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validate()) return;
         setStatus('sending');
         
         try {
             await api.post('/api/v1/contact', formData);
             setStatus('success');
             setFormData({ name: '', email: '', subject: '', message: '' });
+            setErrors({});
             setTimeout(() => setStatus(''), 5000);
         } catch (error) {
             console.error('Email error:', error);
@@ -84,12 +118,12 @@ export default function Contact() {
                                 sub: "Mon-Sat, 10am - 7pm IST"
                             }
                         ].map((item, i) => (
-                            <div key={i} className="group p-8 rounded-3xl bg-white border border-[#d4af37]/10 shadow-[0_10px_40px_rgba(74,26,107,0.05)] hover:border-[#d4af37]/30 transition-all duration-500">
+                            <div key={i} className="group p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-white border border-[#d4af37]/10 shadow-[0_10px_40px_rgba(74,26,107,0.05)] hover:border-[#d4af37]/30 transition-all duration-500">
                                 <div className="p-3 bg-[#d4af37]/10 text-[#d4af37] w-fit rounded-2xl mb-6 group-hover:scale-110 transition-transform">
                                     {item.icon}
                                 </div>
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-2">{item.title}</h3>
-                                <p className="text-2xl font-medium mb-1" >{item.detail}</p>
+                                <p className="text-lg sm:text-2xl font-medium mb-1 break-all" >{item.detail}</p>
                                 <p className="text-sm text-[#000000] tracking-wide font-display">{item.sub}</p>
                             </div>
                         ))}
@@ -100,54 +134,66 @@ export default function Contact() {
 
                 {/* Contact Form */}
                 <div className="lg:col-span-7">
-                    <div className="bg-white p-12 rounded-[3rem] shadow-[0_30px_60px_rgba(74,26,107,0.08)] border border-[#d4af37]/10">
-                        <h2 className="text-3xl text-primary mb-10" >Send a Message</h2>
-                        <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="bg-white p-6 sm:p-12 rounded-[2rem] sm:rounded-[3rem] shadow-[0_30px_60px_rgba(74,26,107,0.08)] border border-[#d4af37]/10">
+                        <h2 className="text-2xl sm:text-3xl text-primary mb-10" >Send a Message</h2>
+                        <form onSubmit={handleSubmit} className="space-y-8" noValidate>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-[#d4af37]">Your Name</label>
                                     <input
                                         type="text"
-                                        required
-                                        className="w-full bg-transparent border-0 border-b border-primary/20 focus:border-[#d4af37] focus:ring-0 transition-all py-3 px-0 text-lg font-medium text-primary"
+                                        className={`w-full bg-transparent border-0 border-b ${errors.name ? 'border-red-500' : 'border-primary/20'} focus:border-[#d4af37] focus:ring-0 transition-all py-3 px-0 text-lg font-medium text-primary`}
                                         value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, name: e.target.value });
+                                            if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
+                                        }}
                                         placeholder="Full Name"
                                     />
+                                    {errors.name && <p className="text-red-500 text-xs font-body font-medium mt-1">{errors.name}</p>}
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-[#d4af37]">Email Address</label>
                                     <input
                                         type="email"
-                                        required
-                                        className="w-full bg-transparent border-0 border-b border-primary/20 focus:border-[#d4af37] focus:ring-0 transition-all py-3 px-0 text-lg font-medium text-primary"
+                                        className={`w-full bg-transparent border-0 border-b ${errors.email ? 'border-red-500' : 'border-primary/20'} focus:border-[#d4af37] focus:ring-0 transition-all py-3 px-0 text-lg font-medium text-primary`}
                                         value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, email: e.target.value });
+                                            if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
+                                        }}
                                         placeholder="Email Address"
                                     />
+                                    {errors.email && <p className="text-red-500 text-xs font-body font-medium mt-1">{errors.email}</p>}
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-[#d4af37]">Subject</label>
                                 <input
                                     type="text"
-                                    required
-                                    className="w-full bg-transparent border-0 border-b border-primary/20 focus:border-[#d4af37] focus:ring-0 transition-all py-3 px-0 text-lg font-medium text-primary"
+                                    className={`w-full bg-transparent border-0 border-b ${errors.subject ? 'border-red-500' : 'border-primary/20'} focus:border-[#d4af37] focus:ring-0 transition-all py-3 px-0 text-lg font-medium text-primary`}
                                     value={formData.subject}
-                                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, subject: e.target.value });
+                                        if (errors.subject) setErrors(prev => ({ ...prev, subject: '' }));
+                                    }}
                                     placeholder="Order Inquiry, Bespoke Request, etc."
                                 />
+                                {errors.subject && <p className="text-red-500 text-xs font-body font-medium mt-1">{errors.subject}</p>}
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-[#d4af37]">Message</label>
                                 <textarea
-                                    required
                                     rows="4"
-                                    className="w-full bg-transparent border-0 border-b border-primary/20 focus:border-[#d4af37] focus:ring-0 transition-all py-3 px-0 text-lg font-medium text-primary resize-none"
+                                    className={`w-full bg-transparent border-0 border-b ${errors.message ? 'border-red-500' : 'border-primary/20'} focus:border-[#d4af37] focus:ring-0 transition-all py-3 px-0 text-lg font-medium text-primary resize-none`}
                                     value={formData.message}
-                                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, message: e.target.value });
+                                        if (errors.message) setErrors(prev => ({ ...prev, message: '' }));
+                                    }}
                                     placeholder="How can we help you?"
                                 ></textarea>
+                                {errors.message && <p className="text-red-500 text-xs font-body font-medium mt-1">{errors.message}</p>}
                             </div>
                             
                             <button
