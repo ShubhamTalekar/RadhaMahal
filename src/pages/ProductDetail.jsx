@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { getProductById } from '../shopifyClient';
+import { getProductById, createShopifyCart } from '../shopifyClient';
 import ProductReviews from '../components/ProductReviews';
 import ProductImageGallery from '../components/ProductImageGallery';
 import { motion } from 'framer-motion';
@@ -14,13 +14,13 @@ export default function ProductDetail() {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
-    const { bag, setBag, wishlist, setWishlist, user } = useApp();
+    const { bag: _bag, setBag, wishlist: _wishlist, setWishlist: _setWishlist, user } = useApp();
 
     const [selectedSize, setSelectedSize] = useState('');
     const [showSizeError, setShowSizeError] = useState(false);
     const [showSizeGuide, setShowSizeGuide] = useState(false);
     const [addedToBag, setAddedToBag] = useState(false);
-    const [addedToWishlist, setAddedToWishlist] = useState(false);
+    const [isBuyingNow, setIsBuyingNow] = useState(false);
     const [notificationEmail, setNotificationEmail] = useState(user?.email || '');
     const [notifyStatus, setNotifyStatus] = useState('idle');
 
@@ -29,10 +29,18 @@ export default function ProductDetail() {
         setLoading(true);
         setError(false);
         getProductById(id)
-            .then(found => { if (mounted) setProduct(found || null); })
-            .catch(() => { if (mounted) setError(true); })
-            .finally(() => { if (mounted) setLoading(false); });
-        return () => { mounted = false; };
+            .then(found => {
+                if (mounted) setProduct(found || null);
+            })
+            .catch(() => {
+                if (mounted) setError(true);
+            })
+            .finally(() => {
+                if (mounted) setLoading(false);
+            });
+        return () => {
+            mounted = false;
+        };
     }, [id]);
 
     useEffect(() => {
@@ -44,7 +52,9 @@ export default function ProductDetail() {
         }
     }, [loading]);
 
-    const fallbackImage = product?.images?.[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&h=800&q=80';
+    const fallbackImage =
+        product?.images?.[0] ||
+        'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&h=800&q=80';
 
     if (loading) {
         return (
@@ -72,9 +82,19 @@ export default function ProductDetail() {
         return (
             <main className="min-h-[60vh] flex flex-col items-center justify-center mt-24">
                 <SEO title="Error - Radha Mahal" />
-                <span className="material-symbols-outlined text-6xl text-error mb-4" style={{ fontVariationSettings: "'FILL' 0, 'wght' 200" }}>error_outline</span>
+                <span
+                    className="material-symbols-outlined text-6xl text-error mb-4"
+                    style={{ fontVariationSettings: "'FILL' 0, 'wght' 200" }}
+                >
+                    error_outline
+                </span>
                 <h3 className="font-headline text-2xl text-secondary mb-4">Error loading product details</h3>
-                <button onClick={() => window.location.reload()} className="px-8 py-3 bg-secondary text-on-secondary rounded-full font-bold uppercase tracking-widest text-sm hover:brightness-110 shadow-lg">Try Again</button>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-8 py-3 bg-secondary text-on-secondary rounded-full font-bold uppercase tracking-widest text-sm hover:brightness-110 shadow-lg"
+                >
+                    Try Again
+                </button>
             </main>
         );
     }
@@ -84,7 +104,12 @@ export default function ProductDetail() {
             <main className="min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-6">
                 <SEO title="Product Not Found - Radha Mahal" />
                 <h1 className="text-4xl text-secondary font-headline">Product not found.</h1>
-                <Link to="/catalog" className="px-8 py-3 bg-secondary text-on-secondary rounded-full font-bold uppercase tracking-widest hover:brightness-110">Back to Catalog</Link>
+                <Link
+                    to="/catalog"
+                    className="px-8 py-3 bg-secondary text-on-secondary rounded-full font-bold uppercase tracking-widest hover:brightness-110"
+                >
+                    Back to Catalog
+                </Link>
             </main>
         );
     }
@@ -97,19 +122,22 @@ export default function ProductDetail() {
         const selectedVariant = product.variants?.find(v => v.title === selectedSize) || product.variants?.[0];
         // Fall back to the stored defaultVariantId (full GID) for single-variant products
         const resolvedVariantId = selectedVariant?.id || product.defaultVariantId;
-        const itemToAdd = { 
-            ...product, 
-            selectedSize, 
-            variantId: resolvedVariantId, 
-            cartItemId: Date.now(), 
-            quantity: 1, 
-            image: fallbackImage 
+        const itemToAdd = {
+            ...product,
+            selectedSize,
+            variantId: resolvedVariantId,
+            cartItemId: Date.now(),
+            quantity: 1,
+            image: fallbackImage,
         };
         setBag(prev => {
             const existingItemIndex = prev.findIndex(item => item.variantId === resolvedVariantId);
             if (existingItemIndex > -1) {
                 const updatedBag = [...prev];
-                updatedBag[existingItemIndex] = { ...updatedBag[existingItemIndex], quantity: updatedBag[existingItemIndex].quantity + 1 };
+                updatedBag[existingItemIndex] = {
+                    ...updatedBag[existingItemIndex],
+                    quantity: updatedBag[existingItemIndex].quantity + 1,
+                };
                 return updatedBag;
             }
             return [...prev, itemToAdd];
@@ -118,27 +146,54 @@ export default function ProductDetail() {
         setTimeout(() => setAddedToBag(false), 2000);
     };
 
-    const handleAddToWishlist = () => {
+    const handleBuyNow = async () => {
         if (product.variants?.length > 0 && !selectedSize) {
             setShowSizeError(true);
             return;
         }
         const selectedVariant = product.variants?.find(v => v.title === selectedSize) || product.variants?.[0];
-        if (!wishlist.find(item => item.id === product.id)) {
-            setWishlist(prev => [...prev, { 
-                ...product, 
-                selectedSize, 
-                variantId: selectedVariant?.id, 
-                image: fallbackImage 
-            }]);
+        const resolvedVariantId = selectedVariant?.id || product.defaultVariantId;
+
+        setIsBuyingNow(true);
+        try {
+            const shopifyCartData = await createShopifyCart(
+                [
+                    {
+                        variantId: resolvedVariantId,
+                        quantity: 1,
+                    },
+                ],
+                null,
+                user?.email
+            );
+
+            if (shopifyCartData?.cart?.checkoutUrl) {
+                let checkoutUrl = shopifyCartData.cart.checkoutUrl;
+                const shopifyDomain = import.meta.env.VITE_SHOPIFY_DOMAIN || 'radha-mahal-2.myshopify.com';
+                try {
+                    const urlObj = new URL(checkoutUrl);
+                    if (urlObj.hostname !== shopifyDomain) {
+                        urlObj.hostname = shopifyDomain;
+                        checkoutUrl = urlObj.toString();
+                    }
+                } catch (e) {
+                    console.error('Failed to parse checkout URL', e);
+                }
+                window.location.href = checkoutUrl;
+            } else {
+                const errorMsg = shopifyCartData?.userErrors?.[0]?.message || 'Shopify checkout is unavailable.';
+                throw new Error(errorMsg);
+            }
+        } catch (error) {
+            console.error('Buy Now error:', error);
+            alert(`Artisan Concierge: ${error.message}`);
+            setIsBuyingNow(false);
         }
-        setAddedToWishlist(true);
-        setTimeout(() => setAddedToWishlist(false), 2000);
     };
 
-    const handleNotifySubmit = async (e) => {
+    const handleNotifySubmit = async e => {
         e.preventDefault();
-        if(!notificationEmail) return;
+        if (!notificationEmail) return;
         setNotifyStatus('submitting');
         try {
             const selectedVariant = product.variants?.find(v => v.title === selectedSize) || product.variants?.[0];
@@ -146,23 +201,23 @@ export default function ProductDetail() {
             await fetch(`${BASE}/api/v1/restock-notification`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    email: notificationEmail, 
-                    productId: product.id, 
-                    variantId: selectedVariant?.id, 
-                    productName: `${product.title} ${selectedSize ? `| Size: ${selectedSize}` : ''}`
-                })
+                body: JSON.stringify({
+                    email: notificationEmail,
+                    productId: product.id,
+                    variantId: selectedVariant?.id,
+                    productName: `${product.title} ${selectedSize ? `| Size: ${selectedSize}` : ''}`,
+                }),
             });
             setNotifyStatus('success');
             setTimeout(() => setNotifyStatus('idle'), 5000);
-        } catch (err) {
+        } catch {
             setNotifyStatus('idle');
         }
     };
 
     return (
         <main className="max-w-screen-2xl mx-auto px-6 md:px-12 py-12">
-            <SEO 
+            <SEO
                 title={`${product.title} - Radha Mahal`}
                 description={product.description || `Buy ${product.title} at Radha Mahal.`}
                 image={product.images?.[0]}
@@ -173,17 +228,24 @@ export default function ProductDetail() {
                 <ProductImageGallery product={product} />
 
                 {/* Right: Product Info Panel */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-                    className="lg:col-span-5 sticky top-32 space-y-10">
+                    transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+                    className="lg:col-span-5 sticky top-32 space-y-10"
+                >
                     <header className="space-y-4">
-                        <h1 className="text-4xl md:text-5xl font-headline text-secondary leading-tight">{product.title}</h1>
+                        <h1 className="text-3xl md:text-4xl font-headline text-secondary leading-tight product-title-shine">
+                            {product.title}
+                        </h1>
                         <div className="flex items-center gap-4">
-                            <span className="text-3xl font-body font-light tracking-wide text-on-surface">₹{product.final_price?.toLocaleString('en-IN')}</span>
+                            <span className="text-3xl font-body font-light tracking-wide text-on-surface">
+                                ₹{product.final_price?.toLocaleString('en-IN')}
+                            </span>
                             {product.discount_percent > 0 && product.price && (
-                                <span className="text-lg font-body text-outline line-through opacity-70">₹{product.price.toLocaleString('en-IN')}</span>
+                                <span className="text-lg font-body text-outline line-through opacity-70">
+                                    ₹{product.price.toLocaleString('en-IN')}
+                                </span>
                             )}
                             <span className="px-3 py-1 bg-surface-container-high text-primary text-[10px] md:text-xs tracking-widest uppercase rounded-full">
                                 {product.fabric}
@@ -191,32 +253,55 @@ export default function ProductDetail() {
                         </div>
                     </header>
                     {product.descriptionHtml ? (
-                        <div 
+                        <div
                             className="text-on-surface/90 text-xs md:text-sm leading-loose font-light prose prose-sm md:prose-base max-w-none prose-p:mb-4 prose-a:text-secondary"
-                            dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} 
+                            dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
                         />
                     ) : product.description ? (
                         <div className="space-y-5 text-on-surface/90 text-xs md:text-sm leading-loose font-light">
-                            {product.description.split('\n').map(l => l.trim()).filter(Boolean).map((line, idx) => {
-                                if (line.toLowerCase().includes('key features')) {
-                                    return <h4 key={idx} className="text-base font-headline text-secondary mt-8 mb-2 border-b border-secondary/20 pb-2 inline-block">{line}</h4>;
-                                }
-                                if (line.includes(':') && line.split(':')[0].length < 40) {
-                                    const [title, ...rest] = line.split(':');
-                                    if (rest.join(':').trim()) {
+                            {product.description
+                                .split('\n')
+                                .map(l => l.trim())
+                                .filter(Boolean)
+                                .map((line, idx) => {
+                                    if (line.toLowerCase().includes('key features')) {
                                         return (
-                                            <p key={idx} className="ml-2 border-l-2 border-secondary/30 pl-4 py-1 bg-surface-container-low/50 rounded-r-lg pr-4">
-                                                <strong className="font-medium text-secondary tracking-wide">{title}:</strong> {rest.join(':')}
-                                            </p>
+                                            <h4
+                                                key={idx}
+                                                className="text-base font-headline text-secondary mt-8 mb-2 border-b border-secondary/20 pb-2 inline-block"
+                                            >
+                                                {line}
+                                            </h4>
                                         );
                                     }
-                                }
-                                return <p key={idx} className="text-justify leading-relaxed">{line}</p>;
-                            })}
+                                    if (line.includes(':') && line.split(':')[0].length < 40) {
+                                        const [title, ...rest] = line.split(':');
+                                        if (rest.join(':').trim()) {
+                                            return (
+                                                <p
+                                                    key={idx}
+                                                    className="ml-2 border-l-2 border-secondary/30 pl-4 py-1 bg-surface-container-low/50 rounded-r-lg pr-4"
+                                                >
+                                                    <strong className="font-medium text-secondary tracking-wide">
+                                                        {title}:
+                                                    </strong>{' '}
+                                                    {rest.join(':')}
+                                                </p>
+                                            );
+                                        }
+                                    }
+                                    return (
+                                        <p key={idx} className="text-justify leading-relaxed">
+                                            {line}
+                                        </p>
+                                    );
+                                })}
                         </div>
                     ) : (
                         <p className="text-on-surface/90 text-xs md:text-sm leading-loose font-light text-justify">
-                            A masterpiece of {product.fabric || 'silk'} designed for {(product.occasion || []).join(' and ').toLowerCase() || 'special'} celebrations. Each thread tells a story of exquisite craftsmanship.
+                            A masterpiece of {product.fabric || 'silk'} designed for{' '}
+                            {(product.occasion || []).join(' and ').toLowerCase() || 'special'} celebrations. Each
+                            thread tells a story of exquisite craftsmanship.
                         </p>
                     )}
                     {product.variants?.length > 0 && (
@@ -224,22 +309,35 @@ export default function ProductDetail() {
                             <div className="flex justify-between items-center">
                                 <h3 className="font-label uppercase tracking-widest text-sm text-outline flex items-center gap-3">
                                     Select Size
-                                    {showSizeError && <span className="text-red-500 normal-case text-xs bg-red-500/10 px-2 py-1 rounded-md animate-fade-in">Please select a size</span>}
+                                    {showSizeError && (
+                                        <span className="text-red-500 normal-case text-xs bg-red-500/10 px-2 py-1 rounded-md animate-fade-in">
+                                            Please select a size
+                                        </span>
+                                    )}
                                 </h3>
-                                <button type="button" onClick={(e) => { e.preventDefault(); setShowSizeGuide(true); }} className="text-primary text-sm font-medium hover:underline tracking-wider">Size Guide</button>
+                                <button
+                                    type="button"
+                                    onClick={e => {
+                                        e.preventDefault();
+                                        setShowSizeGuide(true);
+                                    }}
+                                    className="text-primary text-sm font-medium hover:underline tracking-wider"
+                                >
+                                    Size Guide
+                                </button>
                             </div>
                             <div className="flex gap-4 flex-wrap">
                                 {product.variants.map(variant => (
                                     <button
                                         key={variant.id}
-                                        onClick={(e) => {
+                                        onClick={e => {
                                             e.preventDefault();
                                             setSelectedSize(variant.title);
                                             setShowSizeError(false);
                                         }}
                                         className={`px-4 h-14 min-w-[3.5rem] rounded-full flex items-center justify-center transition-all ${
-                                            selectedSize === variant.title 
-                                                ? 'border-2 border-secondary text-secondary font-bold shadow-[0_0_15px_rgba(233,195,73,0.3)]' 
+                                            selectedSize === variant.title
+                                                ? 'border-2 border-secondary text-secondary font-bold shadow-[0_0_15px_rgba(233,195,73,0.3)]'
                                                 : 'border border-outline-variant hover:border-secondary hover:text-secondary'
                                         }`}
                                     >
@@ -251,9 +349,11 @@ export default function ProductDetail() {
                     )}
                     <div className="flex flex-col gap-4 pt-4">
                         {(() => {
-                            const activeVariant = product.variants?.find(v => v.title === selectedSize) || (product.variants?.length === 1 ? product.variants[0] : null);
+                            const activeVariant =
+                                product.variants?.find(v => v.title === selectedSize) ||
+                                (product.variants?.length === 1 ? product.variants[0] : null);
                             const completelySoldOut = product.availableForSale === false;
-                            
+
                             let isOutOfStock = false;
                             if (activeVariant) {
                                 isOutOfStock = !activeVariant.available;
@@ -262,13 +362,18 @@ export default function ProductDetail() {
                             } else if (completelySoldOut) {
                                 isOutOfStock = true;
                             }
-                            
+
                             if (isOutOfStock) {
-                                const needsSizeToNotify = completelySoldOut && !selectedSize && product.variants?.length > 1;
-                                
+                                const needsSizeToNotify =
+                                    completelySoldOut && !selectedSize && product.variants?.length > 1;
+
                                 return (
                                     <div className="space-y-4">
-                                        <button disabled onClick={(e) => e.preventDefault()} className="w-full py-5 rounded-full font-bold uppercase tracking-widest transition-all bg-white text-outline cursor-not-allowed border border-outline-variant/30">
+                                        <button
+                                            disabled
+                                            onClick={e => e.preventDefault()}
+                                            className="w-full py-5 rounded-full font-bold uppercase tracking-widest transition-all bg-white text-outline cursor-not-allowed border border-outline-variant/30"
+                                        >
                                             Out of Stock
                                         </button>
                                         {notifyStatus === 'success' ? (
@@ -281,16 +386,16 @@ export default function ProductDetail() {
                                             </div>
                                         ) : (
                                             <form onSubmit={handleNotifySubmit} className="flex gap-2">
-                                                <input 
-                                                    type="email" 
-                                                    placeholder="Enter email for restock alert" 
+                                                <input
+                                                    type="email"
+                                                    placeholder="Enter email for restock alert"
                                                     required
                                                     value={notificationEmail}
-                                                    onChange={(e) => setNotificationEmail(e.target.value)}
+                                                    onChange={e => setNotificationEmail(e.target.value)}
                                                     className="flex-1 bg-surface-container border border-outline-variant/50 rounded-full px-5 focus:outline-none focus:border-secondary text-sm placeholder:text-outline/50"
                                                 />
-                                                <button 
-                                                    type="submit" 
+                                                <button
+                                                    type="submit"
                                                     disabled={notifyStatus === 'submitting'}
                                                     className="px-6 py-3 bg-primary text-secondary border border-secondary/40 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-secondary hover:text-on-secondary transition-colors"
                                                 >
@@ -303,29 +408,42 @@ export default function ProductDetail() {
                             }
 
                             return (
-                                <button
-                                    onClick={handleAddToBag}
-                                    className={`w-full py-5 rounded-full font-bold uppercase tracking-widest transition-all shadow-lg shadow-black/20 ${addedToBag ? 'bg-green-600 text-white' : 'bg-secondary text-on-secondary hover:brightness-110'}`}
-                                >
-                                    {addedToBag ? 'Added to Bag ✔' : 'Add to Bag'}
-                                </button>
+                                <>
+                                    <button
+                                        onClick={handleAddToBag}
+                                        className={`w-full py-5 rounded-full font-bold uppercase tracking-widest transition-all shadow-lg shadow-black/20 ${addedToBag ? 'bg-green-600 text-white' : 'bg-secondary text-on-secondary hover:brightness-110'}`}
+                                    >
+                                        {addedToBag ? 'Added to Bag ✔' : 'Add to Bag'}
+                                    </button>
+                                    <button
+                                        onClick={handleBuyNow}
+                                        disabled={isBuyingNow}
+                                        className="relative w-full rounded-full bg-secondary px-4 py-5 font-mono font-bold uppercase tracking-widest text-on-secondary transition-colors duration-300 ease-linear before:absolute before:right-1/2 before:top-1/2 before:-z-[1] before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 before:translate-x-1/2 before:animate-ping before:rounded-full before:bg-secondary hover:brightness-110 disabled:opacity-60 disabled:cursor-wait"
+                                    >
+                                        {isBuyingNow ? 'Processing...' : 'Buy Now'}
+                                    </button>
+                                </>
                             );
                         })()}
-                        <button
-                            onClick={handleAddToWishlist}
-                            className={`w-full border text-secondary py-5 rounded-full font-bold uppercase tracking-widest transition-all ${addedToWishlist ? 'border-green-600 text-green-600 bg-green-600/10' : 'border-secondary/40 hover:bg-secondary/5'}`}
-                        >
-                            {addedToWishlist ? 'Wishlisted ♥' : 'Add to Wishlist'}
-                        </button>
                     </div>
                     {/* Trust Badges */}
                     <div className="grid grid-cols-2 gap-4 pt-8 border-t border-outline-variant/15">
                         <div className="flex items-center gap-3 text-sm text-on-surface-variant">
-                            <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                            <span
+                                className="material-symbols-outlined text-secondary"
+                                style={{ fontVariationSettings: "'FILL' 1" }}
+                            >
+                                verified
+                            </span>
                             Handcrafted Authenticity
                         </div>
                         <div className="flex items-center gap-3 text-sm text-on-surface-variant">
-                            <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>local_shipping</span>
+                            <span
+                                className="material-symbols-outlined text-secondary"
+                                style={{ fontVariationSettings: "'FILL' 1" }}
+                            >
+                                local_shipping
+                            </span>
                             Priority Global Shipping
                         </div>
                     </div>
@@ -337,8 +455,9 @@ export default function ProductDetail() {
                 <div className="text-center space-y-4 max-w-3xl mx-auto px-6">
                     <h2 className="text-4xl font-headline text-secondary italic">The Craftsmanship</h2>
                     <p className="text-on-surface-variant font-light leading-relaxed">
-                        Our artisans spend over 400 hours meticulously hand-stitching each motif using traditional techniques. 
-                        The base is an exquisite Grade-A heritage fabric designed to be passed down through generations.
+                        Our artisans spend over 400 hours meticulously hand-stitching each motif using traditional
+                        techniques. The base is an exquisite Grade-A heritage fabric designed to be passed down through
+                        generations.
                     </p>
                 </div>
             </section>
@@ -352,21 +471,31 @@ export default function ProductDetail() {
                     <div className="space-y-4">
                         <div className="flex items-start gap-4">
                             <span className="material-symbols-outlined text-secondary mt-1">dry_cleaning</span>
-                            <p className="text-on-surface-variant text-sm">Professional dry clean only. Avoid spraying perfumes directly on the gold zardosi embroidery.</p>
+                            <p className="text-on-surface-variant text-sm">
+                                Professional dry clean only. Avoid spraying perfumes directly on the gold zardosi
+                                embroidery.
+                            </p>
                         </div>
                         <div className="flex items-start gap-4">
                             <span className="material-symbols-outlined text-secondary mt-1">inventory_2</span>
-                            <p className="text-on-surface-variant text-sm">Store in a breathable muslin bag in a cool, dry place. Avoid hanging to maintain the silhouette.</p>
+                            <p className="text-on-surface-variant text-sm">
+                                Store in a breathable muslin bag in a cool, dry place. Avoid hanging to maintain the
+                                silhouette.
+                            </p>
                         </div>
                         <div className="flex items-start gap-4">
                             <span className="material-symbols-outlined text-secondary mt-1">iron</span>
-                            <p className="text-on-surface-variant text-sm">Steam iron on reverse side only at the lowest silk setting. Do not iron over the embroidery.</p>
+                            <p className="text-on-surface-variant text-sm">
+                                Steam iron on reverse side only at the lowest silk setting. Do not iron over the
+                                embroidery.
+                            </p>
                         </div>
                     </div>
                 </div>
                 <div className="bg-surface-container-high p-8 rounded-2xl border border-outline-variant/10">
                     <blockquote className="italic text-lg text-primary leading-relaxed">
-                        "A Radha Mahal creation is designed to be an heirloom. Treat it with the same love that our artisans used to create it."
+                        "A Radha Mahal creation is designed to be an heirloom. Treat it with the same love that our
+                        artisans used to create it."
                     </blockquote>
                     <cite className="block mt-6 text-secondary font-headline">— Neha, Creative Director</cite>
                 </div>
@@ -375,7 +504,10 @@ export default function ProductDetail() {
             {showSizeGuide && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm shadow-2xl transition-opacity animate-fade-in">
                     <div className="bg-surface-container-high border border-outline-variant/20 rounded-2xl p-8 max-w-md w-full relative shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                        <button onClick={() => setShowSizeGuide(false)} className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-surface-container-highest text-on-surface-variant hover:text-secondary hover:bg-black/20 transition-all">
+                        <button
+                            onClick={() => setShowSizeGuide(false)}
+                            className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-surface-container-highest text-on-surface-variant hover:text-secondary hover:bg-black/20 transition-all"
+                        >
                             <span className="material-symbols-outlined text-sm">close</span>
                         </button>
                         <h3 className="text-2xl font-headline text-secondary mb-6 italic text-center">Size Guide</h3>
@@ -393,9 +525,12 @@ export default function ProductDetail() {
                                 ['L', '38"', '30"', '40"'],
                                 ['XL', '40"', '32"', '42"'],
                                 ['XXL', '42"', '34"', '44"'],
-                                ['XXXL', '44"', '36"', '46"']
+                                ['XXXL', '44"', '36"', '46"'],
                             ].map(([size, bust, waist, hips]) => (
-                                <div key={size} className="flex justify-between text-sm text-on-surface-variant py-3 border-b border-outline-variant/5 last:border-0 hover:bg-white/5 transition-colors rounded-lg px-2 -mx-2">
+                                <div
+                                    key={size}
+                                    className="flex justify-between text-sm text-on-surface-variant py-3 border-b border-outline-variant/5 last:border-0 hover:bg-white/5 transition-colors rounded-lg px-2 -mx-2"
+                                >
                                     <span className="font-bold text-secondary w-12">{size}</span>
                                     <span className="w-16 text-center">{bust}</span>
                                     <span className="w-16 text-center">{waist}</span>

@@ -3,26 +3,30 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-surface text-on-surface font-body selection:bg-secondary selection:text-on-secondary overflow-x-hidden;
-  }
+    body {
+        @apply bg-surface text-on-surface font-body selection:bg-secondary selection:text-on-secondary overflow-x-hidden;
+    }
 }
 
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    font-variation-settings:
+        'FILL' 0,
+        'wght' 300,
+        'GRAD' 0,
+        'opsz' 24;
 }
 
 .silk-overlay {
-  background: linear-gradient(to top, rgba(75, 40, 77, 0.9) 0%, rgba(75, 40, 77, 0) 50%);
+    background: linear-gradient(to top, rgba(75, 40, 77, 0.9) 0%, rgba(75, 40, 77, 0) 50%);
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-  display: none;
+    display: none;
 }
 
 .hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Override browser autofill styles for dark theme */
@@ -30,14 +34,14 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  transition: background-color 5000s ease-in-out 0s;
-  -webkit-text-fill-color: #e6e0e9 !important;
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: #e6e0e9 !important;
 }
 
 /* Light theme autofill override for luxury auth pages */
 .autofill-light:-webkit-autofill,
-.autofill-light:-webkit-autofill:hover, 
-.autofill-light:-webkit-autofill:focus, 
+.autofill-light:-webkit-autofill:hover,
+.autofill-light:-webkit-autofill:focus,
 .autofill-light:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px #fdfbf7 inset !important;
     -webkit-text-fill-color: #4b284d !important;
@@ -45,8 +49,8 @@ input:-webkit-autofill:active {
 
 /* Light theme autofill override for luxury auth pages */
 .autofill-light:-webkit-autofill,
-.autofill-light:-webkit-autofill:hover, 
-.autofill-light:-webkit-autofill:focus, 
+.autofill-light:-webkit-autofill:hover,
+.autofill-light:-webkit-autofill:focus,
 .autofill-light:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px #fdfbf7 inset !important;
     -webkit-text-fill-color: #4b284d !important;
@@ -54,80 +58,109 @@ input:-webkit-autofill:active {
 
 /* Figma Export Custom animations and effects */
 @keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
 }
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
 }
 
 @keyframes sparkle {
-  0%, 100% {
-    opacity: 0;
-    transform: scale(0);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1);
-  }
+    0%,
+    100% {
+        opacity: 0;
+        transform: scale(0);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 @keyframes gradient-shift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
 }
 
 .animate-shimmer {
-  animation: shimmer 3s infinite;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
-  background-size: 1000px 100%;
+    animation: shimmer 3s infinite;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+    background-size: 1000px 100%;
 }
 
 .animate-float {
-  animation: float 6s ease-in-out infinite;
+    animation: float 6s ease-in-out infinite;
 }
 
 .animate-sparkle {
-  animation: sparkle 2s ease-in-out infinite;
+    animation: sparkle 2s ease-in-out infinite;
 }
 
 .animate-gradient {
-  animation: gradient-shift 8s ease infinite;
-  background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+    background-size: 200% 200%;
 }
 
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
 }
 
 .animate-marquee {
-  animation: marquee 30s linear infinite;
+    animation: marquee 30s linear infinite;
+}
+
+/* Product title shine effect - keeping theme colors intact */
+.product-title-shine {
+    background: linear-gradient(to right, #d4af37 20%, #ffe088 50%, #d4af37 80%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine-title 3s infinite linear;
+    animation-fill-mode: forwards;
+}
+
+@keyframes shine-title {
+    0% {
+        background-position: 200% center;
+    }
+    60% {
+        background-position: 0% center;
+    }
+    100% {
+        background-position: 0% center;
+    }
 }
 
 /* Bruteforce Elfsight widget watermark cleanup */
-a[href*="elfsight.com"],
-a[title*="Free"],
-[class*="eapps-link"],
-[class*="elfsight-app"] > div > a,
+a[href*='elfsight.com'],
+a[title*='Free'],
+[class*='eapps-link'],
+[class*='elfsight-app'] > div > a,
 .eapps-instagram-feed-title,
 .eapps-widget-title,
-[class*="WidgetBackground"],
-[class*="Watermark"] {
+[class*='WidgetBackground'],
+[class*='Watermark'] {
     display: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
