@@ -20,25 +20,55 @@ if (!supabaseUrl) {
     console.warn('[Supabase] ⚠️  SUPABASE_URL is not set. Add it to .env.local.');
 }
 if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn('[Supabase] ⚠️  SUPABASE_SERVICE_ROLE_KEY is not set. Falling back to VITE_SUPABASE_ANON_KEY. RLS-protected actions may fail.');
+    console.warn(
+        '[Supabase] ⚠️  SUPABASE_SERVICE_ROLE_KEY is not set. Falling back to VITE_SUPABASE_ANON_KEY. RLS-protected actions may fail.'
+    );
 }
 
 /**
  * Supabase client — falls back to anon key if service-role is missing.
  * Import this singleton everywhere; do NOT create multiple clients.
  */
-export const supabase = (supabaseUrl && supabaseKey)
-    ? createClient(supabaseUrl, supabaseKey, {
-          auth: {
-              persistSession: false,   // server process has no browser session
-              autoRefreshToken: false,
-          },
-      })
-    : null;
+export const supabase =
+    supabaseUrl && supabaseKey
+        ? createClient(supabaseUrl, supabaseKey, {
+              auth: {
+                  persistSession: false, // server process has no browser session
+                  autoRefreshToken: false,
+              },
+          })
+        : null;
 
 if (supabase) {
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
         console.log('[Supabase] ✅ Client initialised (service-role).');
+
+        // Automatically ensure required 'avatars' storage bucket exists
+        (async () => {
+            try {
+                const { data: buckets, error } = await supabase.storage.listBuckets();
+                if (error) {
+                    console.error('[Supabase Storage] Error listing buckets:', error.message);
+                    return;
+                }
+                const hasAvatars = buckets.some(b => b.name === 'avatars');
+                if (!hasAvatars) {
+                    console.log("[Supabase Storage] Bucket 'avatars' not found. Creating it...");
+                    const { error: createError } = await supabase.storage.createBucket('avatars', {
+                        public: true,
+                        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/jpg'],
+                        fileSizeLimit: 5242880, // 5MB
+                    });
+                    if (createError) {
+                        console.error("[Supabase Storage] Error creating bucket 'avatars':", createError.message);
+                    } else {
+                        console.log("[Supabase Storage] Successfully created 'avatars' bucket.");
+                    }
+                }
+            } catch (err) {
+                console.error('[Supabase Storage] Unexpected storage init error:', err);
+            }
+        })();
     } else {
         console.log('[Supabase] ⚠️ Client initialised (anon key fallback).');
     }
