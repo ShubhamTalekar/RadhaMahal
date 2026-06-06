@@ -49,6 +49,7 @@ export const reviewSchema = z.object({
     author: z.string().min(1).max(100),
     rating: z.number().int().min(1).max(5),
     comment: z.string().min(1).max(1000),
+    isVerified: z.boolean().optional(),
 });
 
 /** POST /api/admin/login */

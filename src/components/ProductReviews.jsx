@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Star, User, Calendar, CheckCircle, MessageSquare, Send } from 'lucide-react';
 import { api } from '../lib/apiClient';
 import { toast } from 'sonner';
@@ -11,8 +12,10 @@ export default function ProductReviews({ productId, user }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
 
+    const isLoggedIn = !!user;
+
     // Check if user has purchased this product
-    const hasPurchased = user?.orders?.some(order => 
+    const hasPurchased = user?.orders?.some(order =>
         order.items.some(item => String(item.id) === String(productId) || item.title.includes(productId))
     );
 
@@ -22,50 +25,67 @@ export default function ProductReviews({ productId, user }) {
                 const data = await api.get(`/api/v1/reviews/${productId}`);
                 setReviews(data);
             } catch (error) {
-                console.error("Failed to load reviews:", error);
-                // Non-critical, so we don't necessarily toast on load failure
+                console.error('Failed to load reviews:', error);
             }
         };
         fetchReviews();
     }, [productId]);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = e => {
         e.preventDefault();
         if (rating === 0) return;
 
         setIsSubmitting(true);
-        
-        const newReview = {
-            id: Date.now(),
-            userName: user?.name || 'Guest User',
+
+        const reviewPayload = {
+            author: user?.name || 'Guest User',
             rating,
             comment,
-            date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
-            isVerified: hasPurchased
+            isVerified: hasPurchased,
         };
 
         const submitReview = async () => {
             try {
-                await api.post(`/api/v1/reviews/${productId}`, newReview);
-                setReviews(prev => [newReview, ...prev]);
+                const response = await api.post(`/api/v1/reviews/${productId}`, reviewPayload);
+                const savedReview = response?.review || {
+                    ...reviewPayload,
+                    date: new Date().toISOString(),
+                };
+                setReviews(prev => [savedReview, ...prev]);
                 setRating(0);
                 setComment('');
                 setIsSubmitting(false);
                 setShowSuccess(true);
-                toast.success("Review published successfully!");
+                toast.success('Review published successfully!');
                 setTimeout(() => setShowSuccess(false), 3000);
             } catch (error) {
-                console.error("Failed to submit review:", error);
+                console.error('Failed to submit review:', error);
                 setIsSubmitting(false);
-                toast.error("Failed to submit review. Please try again later.");
+                toast.error('Failed to submit review. Please try again later.');
             }
         };
         submitReview();
     };
 
-    const averageRating = reviews.length > 0 
-        ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / reviews.length).toFixed(1)
-        : 0;
+    const averageRating =
+        reviews.length > 0 ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / reviews.length).toFixed(1) : 0;
+
+    const formatReviewDate = dateStr => {
+        if (!dateStr) return '';
+        try {
+            if (dateStr.includes(',') || isNaN(Date.parse(dateStr))) {
+                return dateStr;
+            }
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+            });
+        } catch {
+            return dateStr;
+        }
+    };
 
     return (
         <section id="reviews" className="mt-24 border-t border-outline-variant/10 pt-16 animate-fade-in font-headline">
@@ -74,10 +94,10 @@ export default function ProductReviews({ productId, user }) {
                     <h2 className="text-4xl font-headline text-secondary italic">Client Narratives</h2>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center text-[#d4af37]">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <Star 
-                                    key={star} 
-                                    className={`w-5 h-5 ${star <= Math.round(averageRating) ? 'fill-[#d4af37]' : 'text-outline-variant'}`} 
+                            {[1, 2, 3, 4, 5].map(star => (
+                                <Star
+                                    key={star}
+                                    className={`w-5 h-5 ${star <= Math.round(averageRating) ? 'fill-[#d4af37]' : 'text-outline-variant'}`}
                                 />
                             ))}
                         </div>
@@ -86,14 +106,16 @@ export default function ProductReviews({ productId, user }) {
                     </div>
                 </div>
 
-                {hasPurchased && !showSuccess && (
+                {isLoggedIn && !showSuccess && (
                     <div className="bg-surface-container-low p-8 rounded-3xl border border-outline-variant/10 w-full md:max-w-md shadow-sm">
                         <h3 className="text-xl font-headline text-secondary mb-6 italic">Compose Your Review</h3>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] uppercase tracking-widest text-outline font-bold">Your Rating</label>
+                                <label className="text-[10px] uppercase tracking-widest text-outline font-bold">
+                                    Your Rating
+                                </label>
                                 <div className="flex gap-2">
-                                    {[1, 2, 3, 4, 5].map((star) => (
+                                    {[1, 2, 3, 4, 5].map(star => (
                                         <button
                                             key={star}
                                             type="button"
@@ -102,19 +124,21 @@ export default function ProductReviews({ productId, user }) {
                                             onClick={() => setRating(star)}
                                             className="transition-transform hover:scale-110 active:scale-95"
                                         >
-                                            <Star 
-                                                className={`w-8 h-8 ${star <= (hoverRating || rating) ? 'fill-[#d4af37] text-[#d4af37]' : 'text-outline-variant'}`} 
+                                            <Star
+                                                className={`w-8 h-8 ${star <= (hoverRating || rating) ? 'fill-[#d4af37] text-[#d4af37]' : 'text-outline-variant'}`}
                                             />
                                         </button>
                                     ))}
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] uppercase tracking-widest text-outline font-bold">Your Experience</label>
+                                <label className="text-[10px] uppercase tracking-widest text-outline font-bold">
+                                    Your Experience
+                                </label>
                                 <textarea
                                     required
                                     value={comment}
-                                    onChange={(e) => setComment(e.target.value)}
+                                    onChange={e => setComment(e.target.value)}
                                     placeholder="Share the story of your garment..."
                                     className="w-full bg-white border border-outline-variant/20 rounded-2xl p-4 text-sm text-secondary focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all min-h-[120px] resize-none"
                                 ></textarea>
@@ -124,7 +148,13 @@ export default function ProductReviews({ productId, user }) {
                                 disabled={isSubmitting || rating === 0}
                                 className={`w-full py-4 rounded-full font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${isSubmitting ? 'bg-secondary/50 cursor-not-allowed' : 'bg-secondary text-on-secondary hover:brightness-110 shadow-lg shadow-secondary/20'}`}
                             >
-                                {isSubmitting ? <span className="animate-spin text-xl">◌</span> : <><Send className="w-4 h-4" /> Publish Review</>}
+                                {isSubmitting ? (
+                                    <span className="animate-spin text-xl">◌</span>
+                                ) : (
+                                    <>
+                                        <Send className="w-4 h-4" /> Publish Review
+                                    </>
+                                )}
                             </button>
                         </form>
                     </div>
@@ -133,32 +163,47 @@ export default function ProductReviews({ productId, user }) {
                 {showSuccess && (
                     <div className="bg-green-50 border border-green-200 p-8 rounded-3xl w-full md:max-w-md flex flex-col items-center text-center animate-fade-in">
                         <CheckCircle className="w-12 h-12 text-green-600 mb-4" />
-                        <h3 className="text-lg font-bold text-green-800 uppercase tracking-widest mb-2">Review Published</h3>
-                        <p className="text-green-700 text-sm italic">Thank you for sharing your experience with the Radha Mahal community.</p>
+                        <h3 className="text-lg font-bold text-green-800 uppercase tracking-widest mb-2">
+                            Review Published
+                        </h3>
+                        <p className="text-green-700 text-sm italic">
+                            Thank you for sharing your experience with the Radha Mahal community.
+                        </p>
                     </div>
                 )}
 
-                {!hasPurchased && (
+                {!isLoggedIn && (
                     <div className="bg-surface-container-high/50 p-6 rounded-2xl border border-dashed border-outline-variant/30 max-w-sm">
-                        <p className="text-sm text-on-surface-variant italic flex items-center gap-2">
+                        <p className="text-sm text-on-surface-variant italic mb-4 flex items-center gap-2">
                             <MessageSquare className="w-4 h-4 text-secondary/40" />
-                            Sharing your experience is exclusive to verified purchasers of this masterpiece.
+                            Sharing your experience is exclusive to logged-in patrons.
                         </p>
+                        <Link
+                            to="/login"
+                            className="inline-block px-6 py-2 bg-secondary text-on-secondary uppercase tracking-widest font-bold text-xs rounded-full hover:brightness-110 transition-all shadow-md shadow-secondary/10"
+                        >
+                            Sign In to Review
+                        </Link>
                     </div>
                 )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {reviews.length > 0 ? (
-                    reviews.map((review) => (
-                        <div key={review.id} className="p-8 rounded-[2rem] bg-white border border-outline-variant/10 shadow-sm hover:shadow-md transition-shadow group">
+                    reviews.map(review => (
+                        <div
+                            key={review.id || review.date}
+                            className="p-8 rounded-[2rem] bg-white border border-outline-variant/10 shadow-sm hover:shadow-md transition-shadow group"
+                        >
                             <div className="flex justify-between items-start mb-6">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-full bg-secondary/5 flex items-center justify-center text-secondary">
                                         <User className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h4 className="font-headline text-lg text-secondary group-hover:text-primary transition-colors">{review.userName}</h4>
+                                        <h4 className="font-headline text-lg text-secondary group-hover:text-primary transition-colors">
+                                            {review.author || review.userName || 'Guest User'}
+                                        </h4>
                                         <div className="flex items-center gap-2">
                                             {review.isVerified && (
                                                 <span className="flex items-center gap-1 text-[9px] uppercase tracking-widest font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
@@ -170,16 +215,19 @@ export default function ProductReviews({ productId, user }) {
                                 </div>
                                 <div className="text-right">
                                     <div className="flex items-center justify-end text-[#d4af37] mb-1">
-                                        {[1, 2, 3, 4, 5].map((s) => (
-                                            <Star key={s} className={`w-3.5 h-3.5 ${s <= review.rating ? 'fill-[#d4af37]' : 'text-outline-variant'}`} />
+                                        {[1, 2, 3, 4, 5].map(s => (
+                                            <Star
+                                                key={s}
+                                                className={`w-3.5 h-3.5 ${s <= review.rating ? 'fill-[#d4af37]' : 'text-outline-variant'}`}
+                                            />
                                         ))}
                                     </div>
                                     <span className="text-[10px] text-outline-variant flex items-center gap-1 justify-end">
-                                        <Calendar className="w-3 h-3" /> {review.date}
+                                        <Calendar className="w-3 h-3" /> {formatReviewDate(review.date)}
                                     </span>
                                 </div>
                             </div>
-                            <p className="text-on-surface-variant leading-relaxed italic font-light font-body" >
+                            <p className="text-on-surface-variant leading-relaxed italic font-light font-body">
                                 "{review.comment}"
                             </p>
                         </div>
@@ -187,7 +235,9 @@ export default function ProductReviews({ productId, user }) {
                 ) : (
                     <div className="col-span-1 md:col-span-2 py-20 text-center border-2 border-dashed border-outline-variant/10 rounded-[3rem]">
                         <MessageSquare className="w-12 h-12 text-outline-variant/20 mx-auto mb-4" />
-                        <p className="text-on-surface-variant italic">Be the first to narrate your experience with this creation.</p>
+                        <p className="text-on-surface-variant italic">
+                            Be the first to narrate your experience with this creation.
+                        </p>
                     </div>
                 )}
             </div>
